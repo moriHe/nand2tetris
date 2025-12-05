@@ -195,9 +195,11 @@ int main(int argc, char *argv[]) {
             char address[18] = "";
             get_address(address, binary_addr);
 
-            add_line_break(&first_line, hack_file);
-            fprintf(hack_file, "%s", address);
-            
+            if (tmp_dec_idx > 0) {
+                add_line_break(&first_line, hack_file);
+                fprintf(hack_file, "%s", address);
+            }
+                
             tmp_dec[0] = '\0'; // Reset and continue
             tmp_dec_idx = 0;
             is_a = false;
@@ -240,11 +242,9 @@ int main(int argc, char *argv[]) {
             tmp_c_subset_idx++;
             continue;
         }
-            
+        
         if (!is_comp) {
             const char *binary_str = get_c_instr_binary(tmp_c_subset, comp_map_size, comp_map);
-            if (done)
-                printf("binstring=%s\ntmp_c_subset=%s\n", binary_str, tmp_c_subset);
             if (binary_str != NULL) {
                 tmp_c[3] = binary_str[0];
                 tmp_c[4] = binary_str[1];
@@ -263,8 +263,11 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        add_line_break(&first_line, hack_file);
-        fprintf(hack_file, "%s", tmp_c);
+        if (tmp_c_subset_idx > 0) {
+            add_line_break(&first_line, hack_file);
+            fprintf(hack_file, "%s", tmp_c);
+        }
+
         strcpy(tmp_c, "1110000000000000");
         tmp_c_subset[0] = '\0';
         tmp_c_subset_idx = 0;
