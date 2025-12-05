@@ -3,7 +3,8 @@
 #include <string.h>
 #include "lookup.h"
 
-
+// TODO: Add END JMP
+// TODO: Handle Variables
 void add_line_break(int *first_line, FILE *hack_file) {
     if (!*first_line)
         fputc('\n', hack_file);
@@ -199,7 +200,7 @@ int main(int argc, char *argv[]) {
                 add_line_break(&first_line, hack_file);
                 fprintf(hack_file, "%s", address);
             }
-                
+
             tmp_dec[0] = '\0'; // Reset and continue
             tmp_dec_idx = 0;
             is_a = false;
