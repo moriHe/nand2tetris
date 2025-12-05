@@ -140,10 +140,14 @@ int main(int argc, char *argv[]) {
     bool is_dest = false;
     bool is_comp = false;
 
-    int done = 0;
+    bool done = false;
     // Iterate over each char in the file
-    while ((ch = fgetc(fptr)) != EOF) {
+    while (!done) {
+        ch = fgetc(fptr);
+        if (done)
+            break;
         unsigned char uch = (unsigned char)ch;
+        done = (ch == EOF);
         bool newline = NEWLINE[uch];
         // 1. comment and whitespace logic for skipping
         if (COMMENT[uch]) {
@@ -180,7 +184,7 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
 
-            if (!newline) {
+            if (!newline && !done) {
                 tmp_dec_idx++;
                 continue;
             }
@@ -230,14 +234,17 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (!newline) {
+        if (!newline && !done) {
             tmp_c_subset[tmp_c_subset_idx] = uch;
+            tmp_c_subset[tmp_c_subset_idx + 1] = '\0';
             tmp_c_subset_idx++;
             continue;
         }
-
+            
         if (!is_comp) {
             const char *binary_str = get_c_instr_binary(tmp_c_subset, comp_map_size, comp_map);
+            if (done)
+                printf("binstring=%s\ntmp_c_subset=%s\n", binary_str, tmp_c_subset);
             if (binary_str != NULL) {
                 tmp_c[3] = binary_str[0];
                 tmp_c[4] = binary_str[1];
