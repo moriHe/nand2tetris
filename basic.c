@@ -3,7 +3,8 @@
 #include <string.h>
 #include "lookup.h"
 
-
+// TODO: Add END JMP
+// TODO: Handle Variables
 void add_line_break(int *first_line, FILE *hack_file) {
     if (!*first_line)
         fputc('\n', hack_file);
@@ -140,10 +141,14 @@ int main(int argc, char *argv[]) {
     bool is_dest = false;
     bool is_comp = false;
 
-    int done = 0;
+    bool done = false;
     // Iterate over each char in the file
-    while ((ch = fgetc(fptr)) != EOF) {
+    while (!done) {
+        ch = fgetc(fptr);
+        if (done)
+            break;
         unsigned char uch = (unsigned char)ch;
+        done = (ch == EOF);
         bool newline = NEWLINE[uch];
         // 1. comment and whitespace logic for skipping
         if (COMMENT[uch]) {
@@ -180,7 +185,7 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
 
-            if (!newline) {
+            if (!newline && !done) {
                 tmp_dec_idx++;
                 continue;
             }
@@ -191,9 +196,11 @@ int main(int argc, char *argv[]) {
             char address[18] = "";
             get_address(address, binary_addr);
 
-            add_line_break(&first_line, hack_file);
-            fprintf(hack_file, "%s", address);
-            
+            if (tmp_dec_idx > 0) {
+                add_line_break(&first_line, hack_file);
+                fprintf(hack_file, "%s", address);
+            }
+
             tmp_dec[0] = '\0'; // Reset and continue
             tmp_dec_idx = 0;
             is_a = false;
@@ -230,12 +237,13 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (!newline) {
+        if (!newline && !done) {
             tmp_c_subset[tmp_c_subset_idx] = uch;
+            tmp_c_subset[tmp_c_subset_idx + 1] = '\0';
             tmp_c_subset_idx++;
             continue;
         }
-
+        
         if (!is_comp) {
             const char *binary_str = get_c_instr_binary(tmp_c_subset, comp_map_size, comp_map);
             if (binary_str != NULL) {
@@ -256,8 +264,11 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        add_line_break(&first_line, hack_file);
-        fprintf(hack_file, "%s", tmp_c);
+        if (tmp_c_subset_idx > 0) {
+            add_line_break(&first_line, hack_file);
+            fprintf(hack_file, "%s", tmp_c);
+        }
+
         strcpy(tmp_c, "1110000000000000");
         tmp_c_subset[0] = '\0';
         tmp_c_subset_idx = 0;
