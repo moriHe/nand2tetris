@@ -71,18 +71,17 @@ void get_address(char *a_instr, char *binary_addr) {
     if (!binary_addr) {
         return;
     }
-    size_t max_addr_len = 16;
-    size_t zero_space = max_addr_len - strlen(binary_addr);
 
-    a_instr[0] = '0';
-    for (size_t i = 1; i < zero_space; i++) {
+    for (size_t i = 0; i < 17; i++) {
         a_instr[i] = '0';
     }
-    for (size_t i = zero_space; i <= 16; i++) {
-        a_instr[i] = binary_addr[i - zero_space];
+
+    size_t start = 16 - strlen(binary_addr);
+    for (size_t i = 0; i < strlen(binary_addr); i++) {
+        a_instr[start + i] = binary_addr[i];
     }
 
-    a_instr[17] = '\0';
+    a_instr[16] = '\0';
 }
 
 int main(int argc, char *argv[]) {
@@ -193,7 +192,7 @@ int main(int argc, char *argv[]) {
             int value = atoi(tmp_dec);
             char binary_addr[17] = "";
             get_binary_addr(binary_addr, value, 0, 0);
-            char address[18] = "";
+            char address[17] = "";
             get_address(address, binary_addr);
 
             if (tmp_dec_idx > 0) {
