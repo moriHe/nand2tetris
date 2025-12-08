@@ -1,11 +1,14 @@
 #include "instr_processing.h"
 
+// General helper
 void add_line_break(int *first_line, FILE *hack_file) {
     if (!*first_line)
         fputc('\n', hack_file);
     *first_line = 0;
 }
 
+
+// A-Instruction helper
 void get_binary_addr(char *addr_inv, int quotient, int remainder, int idx) {
     if (quotient == 0 && idx == 0) {
         addr_inv[0] = '0';
@@ -33,6 +36,7 @@ void get_binary_addr(char *addr_inv, int quotient, int remainder, int idx) {
     get_binary_addr(addr_inv, new_quo, new_rem, idx);
 }
 
+// A-Instruction helper
 void get_address(char *a_instr, char *binary_addr) {
     if (!binary_addr) {
         return;
@@ -53,6 +57,7 @@ void get_address(char *a_instr, char *binary_addr) {
 
 int  tmp_dec_idx = 0;
 char tmp_dec[50];
+// A-Instructon writer
 char *process_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file) {
     bool newline = NEWLINE[uch];
     tmp_dec[tmp_dec_idx + 1] = '\0';
@@ -78,5 +83,95 @@ char *process_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file)
     tmp_dec[0] = '\0'; // Reset and continue
     tmp_dec_idx = 0;
     *is_a = false;
+    return NULL;
+}
+
+// C-Instruction helper
+const char *get_c_instr_binary(char *instr, size_t map_size, struct asmb_binary_map *binary_map) {
+    for (size_t i = 0; i < map_size; i++) {
+        if (strcmp(binary_map[i].asmb, instr) == 0) {
+            return binary_map[i].binary;
+        };
+    };
+
+    return NULL;
+}
+
+int tmp_c_subset_idx = 0;
+char tmp_c_subset[50];
+char tmp_c[] = "1110000000000000";
+bool is_c = false;
+bool is_dest = false;
+bool is_comp = false;
+// C-Instruction
+char *process_c(unsigned char uch, int *first_line, FILE *hack_file) {
+    bool newline = NEWLINE[uch];
+    if (!is_dest && EQUAL_SIGN[uch]) {
+        is_dest = true;
+        const char *binary_str = get_c_instr_binary(tmp_c_subset, dest_map_size, dest_map);
+        if (binary_str != NULL) {
+            tmp_c[10] = binary_str[0];
+            tmp_c[11] = binary_str[1];
+            tmp_c[12] = binary_str[2];
+        }
+        tmp_c_subset[0] = '\0';
+        tmp_c_subset_idx = 0;
+        return NULL;
+    }
+
+    if (!is_comp && SEMICOLON[uch]) {
+        is_comp = true;
+        const char *binary_str = get_c_instr_binary(tmp_c_subset, comp_map_size, comp_map);
+        if (binary_str != NULL) {
+            tmp_c[3] = binary_str[0];
+            tmp_c[4] = binary_str[1];
+            tmp_c[5] = binary_str[2];
+            tmp_c[6] = binary_str[3];
+            tmp_c[7] = binary_str[4];
+            tmp_c[8] = binary_str[5];
+            tmp_c[9] = binary_str[6];
+        }
+        tmp_c_subset[0] = '\0';
+        tmp_c_subset_idx = 0;
+        return NULL;
+    }
+
+    if (!newline) {
+        tmp_c_subset[tmp_c_subset_idx] = uch;
+        tmp_c_subset[tmp_c_subset_idx + 1] = '\0';
+        tmp_c_subset_idx++;
+        return NULL;
+    }
+    
+    if (!is_comp) {
+        const char *binary_str = get_c_instr_binary(tmp_c_subset, comp_map_size, comp_map);
+        if (binary_str != NULL) {
+            tmp_c[3] = binary_str[0];
+            tmp_c[4] = binary_str[1];
+            tmp_c[5] = binary_str[2];
+            tmp_c[6] = binary_str[3];
+            tmp_c[7] = binary_str[4];
+            tmp_c[8] = binary_str[5];
+            tmp_c[9] = binary_str[6];
+        }
+    } else {
+        const char *binary_str = get_c_instr_binary(tmp_c_subset, jmp_map_size, jmp_map);
+        if (binary_str != NULL) {
+            tmp_c[13] = binary_str[0];
+            tmp_c[14] = binary_str[1];
+            tmp_c[15] = binary_str[2];
+        }
+    }
+
+    if (tmp_c_subset_idx > 0) {
+        add_line_break(first_line, hack_file);
+        fprintf(hack_file, "%s", tmp_c);
+    }
+
+    strcpy(tmp_c, "1110000000000000");
+    tmp_c_subset[0] = '\0';
+    tmp_c_subset_idx = 0;
+    is_dest = false;
+    is_comp = false;
     return NULL;
 }
