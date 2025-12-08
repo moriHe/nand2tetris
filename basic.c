@@ -2,14 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lookup.h"
+#include "instr_processing.h"
 
 // TODO: Add END JMP
 // TODO: Handle Variables
-void add_line_break(int *first_line, FILE *hack_file) {
-    if (!*first_line)
-        fputc('\n', hack_file);
-    *first_line = 0;
-}
 const char *get_c_instr_binary(char *instr, size_t map_size, struct asmb_binary_map *binary_map) {
     for (size_t i = 0; i < map_size; i++) {
         if (strcmp(binary_map[i].asmb, instr) == 0) {
@@ -18,70 +14,6 @@ const char *get_c_instr_binary(char *instr, size_t map_size, struct asmb_binary_
     };
 
     return NULL;
-}
-
-char *finish_binary(char *result, size_t idx) {
-    if (idx == 15)
-        return result;
-
-    size_t pad = 16 - idx;
-    for (size_t i = 0; i < pad; i++) {
-        result[i] = '0';
-    }
-
-    return result;
-}
-
-void prepend_char(char *s, char c) {
-    size_t len = strlen(s);
-
-    memmove(s + 1, s, len + 1);
-
-    s[0] = c;
-}
-
-void get_binary_addr(char *addr_inv, int quotient, int remainder, int idx) {
-    if (quotient == 0 && idx == 0) {
-        addr_inv[0] = '0';
-        addr_inv[1] = '\0';
-        return;
-    }
-    
-    if (quotient == 0) {
-        addr_inv[idx] = '\0';
-        char *end = addr_inv + strlen(addr_inv) - 1;
-        while (addr_inv < end) {
-            *addr_inv ^= *end;
-            *end ^= *addr_inv;
-            *addr_inv ^= *end;
-            addr_inv++;
-            end--;
-        }
-        return;
-    }
-    
-    int new_quo = quotient / 2;
-    int new_rem = quotient % 2;
-    addr_inv[idx] = new_rem ? '1' : '0';
-    idx++;
-    get_binary_addr(addr_inv, new_quo, new_rem, idx);
-}
-
-void get_address(char *a_instr, char *binary_addr) {
-    if (!binary_addr) {
-        return;
-    }
-
-    for (size_t i = 0; i < 17; i++) {
-        a_instr[i] = '0';
-    }
-
-    size_t start = 16 - strlen(binary_addr);
-    for (size_t i = 0; i < strlen(binary_addr); i++) {
-        a_instr[start + i] = binary_addr[i];
-    }
-
-    a_instr[16] = '\0';
 }
 
 int main(int argc, char *argv[]) {
@@ -128,8 +60,6 @@ int main(int argc, char *argv[]) {
     bool is_comment = false;
 
     // A-Instruction helpers
-    int  tmp_dec_idx = 0;
-    char tmp_dec[50];
     bool is_a = false;
 
     // C-Instruction
@@ -140,14 +70,10 @@ int main(int argc, char *argv[]) {
     bool is_dest = false;
     bool is_comp = false;
 
-    bool done = false;
     // Iterate over each char in the file
-    while (!done) {
-        ch = fgetc(fptr);
-        if (done)
-            break;
+    while ((ch = fgetc(fptr)) != EOF) {
+
         unsigned char uch = (unsigned char)ch;
-        done = (ch == EOF);
         bool newline = NEWLINE[uch];
         // 1. comment and whitespace logic for skipping
         if (COMMENT[uch]) {
@@ -176,34 +102,14 @@ int main(int argc, char *argv[]) {
 
         // Gather decimal value and compute A-Instruction. Write it into the hack file.
         if (is_a) {
-            tmp_dec[tmp_dec_idx + 1] = '\0';
-            tmp_dec[tmp_dec_idx] = uch;
-            size_t len = strlen(tmp_dec);
-            if (newline && len <= 1) {
-                fprintf(stderr, "Error: Unexpected end of line. Address missing in A-Instruction\n"); // TODO: Add Line Number info.
-                return 1;
-            }
-
-            if (!newline && !done) {
-                tmp_dec_idx++;
+            char *error = process_a(uch, &is_a, &first_line, hack_file);
+            if (error == NULL) {
                 continue;
             }
-            
-            int value = atoi(tmp_dec);
-            char binary_addr[17] = "";
-            get_binary_addr(binary_addr, value, 0, 0);
-            char address[17] = "";
-            get_address(address, binary_addr);
-
-            if (tmp_dec_idx > 0) {
-                add_line_break(&first_line, hack_file);
-                fprintf(hack_file, "%s", address);
+            else {
+                fprintf(stderr, "Error: processing a instruction failed.");
+                return 1;
             }
-
-            tmp_dec[0] = '\0'; // Reset and continue
-            tmp_dec_idx = 0;
-            is_a = false;
-            continue;
         }
 
         if (!is_dest && EQUAL_SIGN[uch]) {
@@ -236,7 +142,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (!newline && !done) {
+        if (!newline) {
             tmp_c_subset[tmp_c_subset_idx] = uch;
             tmp_c_subset[tmp_c_subset_idx + 1] = '\0';
             tmp_c_subset_idx++;
