@@ -35,12 +35,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char *out_name;
-    char filename_body[2];
-    strncpy(filename_body, filename, 1);
-    filename_body[1] = '\0';
-    printf("filename=%s\n", filename_body);
-    FILE *hack_file = fopen("test.hack", "w");
+    char filename_body[filename_length + 2];
+    int prefix_len = filename_length - 3; // This includes the "." Cuts of "asm"
+    memcpy(filename_body, filename, prefix_len);
+    memcpy(filename_body + prefix_len, "hack", 5);
+    
+    FILE *hack_file = fopen(filename_body, "w");
     if (hack_file == NULL) {
         fprintf(stderr, "Error: Initializing hack file.");
         return 1;
