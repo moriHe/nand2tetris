@@ -58,7 +58,7 @@ void get_address(char *a_instr, char *binary_addr) {
 int  tmp_dec_idx = 0;
 char tmp_dec[50];
 // A-Instructon writer
-char *process_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file) {
+char *process_loop_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file, int *line) {
     bool newline = NEWLINE[uch];
     tmp_dec[tmp_dec_idx + 1] = '\0';
     tmp_dec[tmp_dec_idx] = uch;
@@ -68,7 +68,12 @@ char *process_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file)
         tmp_dec_idx++;
         return NULL;
     }
-    // TODO Error handling. Eg when there is no decimal value or no value at all after @        
+    
+    return write_a(is_a, first_line, hack_file, line);
+}
+
+char *write_a(bool *is_a, int *first_line, FILE *hack_file, int *line) {
+    // TODO Error handling. Eg when there is no decimal value or no value at all after @  
     int value = atoi(tmp_dec);
     char binary_addr[17] = "";
     get_binary_addr(binary_addr, value, 0, 0);
@@ -83,6 +88,7 @@ char *process_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file)
     tmp_dec[0] = '\0'; // Reset and continue
     tmp_dec_idx = 0;
     *is_a = false;
+    *line = *line + 1;
     return NULL;
 }
 
@@ -103,8 +109,9 @@ char tmp_c[] = "1110000000000000";
 bool is_c = false;
 bool is_dest = false;
 bool is_comp = false;
+bool c_pending = false;
 // C-Instruction
-char *process_c(unsigned char uch, int *first_line, FILE *hack_file) {
+char *process_loop_c(unsigned char uch, int *first_line, FILE *hack_file, int *line) {
     bool newline = NEWLINE[uch];
     if (!is_dest && EQUAL_SIGN[uch]) {
         is_dest = true;
@@ -116,6 +123,7 @@ char *process_c(unsigned char uch, int *first_line, FILE *hack_file) {
         }
         tmp_c_subset[0] = '\0';
         tmp_c_subset_idx = 0;
+        c_pending = true;
         return NULL;
     }
 
@@ -133,6 +141,7 @@ char *process_c(unsigned char uch, int *first_line, FILE *hack_file) {
         }
         tmp_c_subset[0] = '\0';
         tmp_c_subset_idx = 0;
+        c_pending = true;
         return NULL;
     }
 
@@ -140,9 +149,17 @@ char *process_c(unsigned char uch, int *first_line, FILE *hack_file) {
         tmp_c_subset[tmp_c_subset_idx] = uch;
         tmp_c_subset[tmp_c_subset_idx + 1] = '\0';
         tmp_c_subset_idx++;
+        c_pending = true;
         return NULL;
     }
-    
+
+    return write_c(first_line, hack_file, line);
+}
+
+// Force write outside the loop
+char *write_c(int *first_line, FILE *hack_file, int *line) {
+    if (!c_pending) return NULL;
+
     if (!is_comp) {
         const char *binary_str = get_c_instr_binary(tmp_c_subset, comp_map_size, comp_map);
         if (binary_str != NULL) {
@@ -163,15 +180,17 @@ char *process_c(unsigned char uch, int *first_line, FILE *hack_file) {
         }
     }
 
-    if (tmp_c_subset_idx > 0) {
-        add_line_break(first_line, hack_file);
-        fprintf(hack_file, "%s", tmp_c);
-    }
+    add_line_break(first_line, hack_file);
+    fprintf(hack_file, "%s", tmp_c);
+
 
     strcpy(tmp_c, "1110000000000000");
     tmp_c_subset[0] = '\0';
     tmp_c_subset_idx = 0;
     is_dest = false;
     is_comp = false;
+    c_pending = false;
+    *line = *line + 1;
+    
     return NULL;
 }

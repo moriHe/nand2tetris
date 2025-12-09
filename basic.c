@@ -4,16 +4,16 @@
 #include "lookup.h"
 #include "instr_processing.h"
 
-// TODO: Add END JMP
-// TODO: Handle Variables
+// TODO: Handle Variables like @i (LOOP) @LOOP
+
 int main(int argc, char *argv[]) {
-    // Check validity args
+    // Input validation Start
     if (argc < 2) {
         fprintf(stderr, "Error: no filename provided.\n");
         return 1;
     }
 
-    const char *filename = argv[1];
+    char *filename = argv[1];
     size_t filename_length = strlen(filename);
     if (filename_length < 5)
     {
@@ -25,8 +25,9 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error: wrong file format. File needs to end on .asm.\n");
         return 1;
     }
+    // Input validation Start
 
-    // Load asm file (read from)
+    // Load input and output file Start
     FILE* fptr;
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
@@ -34,53 +35,45 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Load hack file (written to)
-    // TODO: Take name of incoming file and name outgoing file the same with .hack ending
+    char *out_name;
+    char filename_body[2];
+    strncpy(filename_body, filename, 1);
+    filename_body[1] = '\0';
+    printf("filename=%s\n", filename_body);
     FILE *hack_file = fopen("test.hack", "w");
     if (hack_file == NULL) {
         fprintf(stderr, "Error: Initializing hack file.");
         return 1;
     }
-    
-    int ch;
+    // Load input and output file Start
 
-    // Decides whether to write \n or not after newline
-    int first_line = 1;
-    // While true skips ch processing until newline
-    bool is_comment = false;
-
-    // A-Instruction helpers
-    bool is_a = false;
-
-    // Iterate over each char in the file
+    int ch;                     // Holds the current char from the input file.
+    int first_line = 1;         // First line does not add a newline to the output file. 
+    bool is_comment = false;    // Marks the beginning of a Comment (Identifier: /).
+    bool is_a = false;          // Marks the beginning of an A-Instruction (Identifier: @).
+    int line = 0;               // ++, when a new line was written to thhe hack file.
     while ((ch = fgetc(fptr)) != EOF) {
 
-        unsigned char uch = (unsigned char)ch;
+        unsigned char uch = (unsigned char)ch;        
         bool newline = NEWLINE[uch];
-        // 1. comment and whitespace logic for skipping
         if (COMMENT[uch]) {
             is_comment = true;
             continue;
         }
 
-        if (is_comment && !newline) {
-            continue;
-        }
+        if (is_comment && !newline) continue;
 
-        if (is_comment && newline) {
-            is_comment = false;
-        }
+        // No continue, because there could be an instruction before the comment that needs to be processed.
+        if (is_comment && newline) is_comment = false;
 
-        // 2. A-Instruction
-        // If @ set marker for A-Instruction, proceed.
         if (A_INSTR[uch]) {
             is_a = true;
             continue;
         }
 
-        // Gather decimal value and compute A-Instruction. Write it into the hack file.
+        // In each iteration, decides to add 'uch' as the next number of A's decimal value or write the A-Instruction into the output file.
         if (is_a) {
-            char *error = process_a(uch, &is_a, &first_line, hack_file);
+            char *error = process_loop_a(uch, &is_a, &first_line, hack_file, &line);
             if (error == NULL)
                 continue;
             else {
@@ -89,7 +82,9 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        char *error = process_c(uch, &first_line, hack_file);
+        // If is_a is false, a c instruction is processed
+        // In each iteration, when newline writes to 
+        char *error = process_loop_c(uch, &first_line, hack_file, &line);
         if (error == NULL)
             continue;
         else {
@@ -99,6 +94,16 @@ int main(int argc, char *argv[]) {
         
     }
 
+    // Write last line of asm file into the hack file. 
+    // Happens if the last line does not end with newline indicator (which is usually the case)
+    if (is_a) {
+        char *error = write_a(&is_a, &first_line, hack_file, &line);
+        if (error != NULL) fprintf(stderr, "Error: processing a after loop");
+    } else {
+        char *error = write_c(&first_line, hack_file, &line);
+        if (error != NULL) fprintf(stderr, "Error: processing c after loop");
+    }
+    printf("line=%d\n", line);
     fclose(hack_file);
     fclose(fptr);
 
