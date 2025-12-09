@@ -103,6 +103,15 @@ int main(int argc, char *argv[]) {
         char *error = write_c(&first_line, hack_file, &line);
         if (error != NULL) fprintf(stderr, "Error: processing c after loop");
     }
+
+    char binary_addr[17] = "";
+    get_binary_addr(binary_addr, line, 0, 0);
+    char address[17] = "";
+    get_address(address, binary_addr);
+    add_line_break(&first_line, hack_file);
+    fprintf(hack_file, "%s", address);
+    add_line_break(&first_line, hack_file);
+    fprintf(hack_file,"%s", "1110000000000111");
     printf("line=%d\n", line);
     fclose(hack_file);
     fclose(fptr);
