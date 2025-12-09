@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     add_line_break(&first_line, hack_file);
     fprintf(hack_file, "%s", address);
     add_line_break(&first_line, hack_file);
-    fprintf(hack_file,"%s", "1110000000000111");
+    fprintf(hack_file,"%s", "1110101010000111");
     printf("line=%d\n", line);
     fclose(hack_file);
     fclose(fptr);
