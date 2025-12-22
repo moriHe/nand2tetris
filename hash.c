@@ -4,27 +4,24 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include "hash.h"
 
-typedef struct {
-    const char *key;
-    int value;
-    bool used;
-} Entry;
-
-typedef struct {
-    Entry *slots;
-    size_t capacity;
-    size_t size;
-} HashTable;
-
-typedef struct {
-    bool found;
-    const Entry *slot;
-    const char *error;
-} HashResp;
 
 static Entry slots[1024] = {0};
 static HashTable ht = {slots, 1024, 0};
+
+static size_t ht_hash_index(const char *str) {
+    uint32_t  h32 = UINT32_C(2166136261);
+    uint32_t prime = UINT32_C(16777619);
+    size_t str_len = strlen(str);
+    for (size_t i = 0; i < str_len; i++) {
+        unsigned char uch = (unsigned char) str[i];
+        h32 ^= uch;
+        h32 = h32 * prime;
+    }
+
+    return h32 % ht.capacity;
+}
 
 const char *ht_insert(const char *str, int value) {
     if (str == NULL)
@@ -55,19 +52,6 @@ const char *ht_insert(const char *str, int value) {
     }
 
     return NULL;
-}
-
-static size_t ht_hash_index(const char *str) {
-    uint32_t  h32 = UINT32_C(2166136261);
-    uint32_t prime = UINT32_C(16777619);
-    size_t str_len = strlen(str);
-    for (size_t i = 0; i < str_len; i++) {
-        unsigned char uch = (unsigned char) str[i];
-        h32 ^= uch;
-        h32 = h32 * prime;
-    }
-
-    return h32 % ht.capacity;
 }
 
 HashResp ht_get(const char *str) {
