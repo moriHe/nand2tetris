@@ -58,7 +58,7 @@ void get_address(char *a_instr, char *binary_addr) {
 int  tmp_dec_idx = 0;
 char tmp_dec[50];
 // A-Instructon writer
-char *process_loop_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file, int *line) {
+char *process_loop_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_file, int *total_index) {
     bool newline = NEWLINE[uch];
     tmp_dec[tmp_dec_idx + 1] = '\0';
     tmp_dec[tmp_dec_idx] = uch;
@@ -69,10 +69,10 @@ char *process_loop_a(unsigned char uch, bool *is_a, int *first_line, FILE *hack_
         return NULL;
     }
     
-    return write_a(is_a, first_line, hack_file, line);
+    return write_a(is_a, first_line, hack_file, total_index);
 }
 
-char *write_a(bool *is_a, int *first_line, FILE *hack_file, int *line) {
+char *write_a(bool *is_a, int *first_line, FILE *hack_file, int *total_index) {
     // TODO Error handling. Eg when there is no decimal value or no value at all after @  
     int value = atoi(tmp_dec);
     char binary_addr[17] = "";
@@ -88,7 +88,7 @@ char *write_a(bool *is_a, int *first_line, FILE *hack_file, int *line) {
     tmp_dec[0] = '\0'; // Reset and continue
     tmp_dec_idx = 0;
     *is_a = false;
-    *line = *line + 1;
+    *total_index = *total_index + 1;
     return NULL;
 }
 
@@ -111,7 +111,7 @@ bool is_dest = false;
 bool is_comp = false;
 bool c_pending = false;
 // C-Instruction
-char *process_loop_c(unsigned char uch, int *first_line, FILE *hack_file, int *line) {
+char *process_loop_c(unsigned char uch, int *first_line, FILE *hack_file, int *total_index) {
     bool newline = NEWLINE[uch];
     if (!is_dest && EQUAL_SIGN[uch]) {
         is_dest = true;
@@ -153,11 +153,11 @@ char *process_loop_c(unsigned char uch, int *first_line, FILE *hack_file, int *l
         return NULL;
     }
 
-    return write_c(first_line, hack_file, line);
+    return write_c(first_line, hack_file, total_index);
 }
 
 // Force write outside the loop
-char *write_c(int *first_line, FILE *hack_file, int *line) {
+char *write_c(int *first_line, FILE *hack_file, int *total_index) {
     if (!c_pending) return NULL;
 
     if (!is_comp) {
@@ -190,7 +190,7 @@ char *write_c(int *first_line, FILE *hack_file, int *line) {
     is_dest = false;
     is_comp = false;
     c_pending = false;
-    *line = *line + 1;
+    *total_index = *total_index + 1;
     
     return NULL;
 }
