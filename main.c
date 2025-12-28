@@ -19,5 +19,14 @@ int  main(int argc, char *argv[]) {
         fprintf(stderr, "Error: Could not open the file. Is the path correct?");
     }
 
+    for (char buf[50]; fgets(buf, sizeof buf, asm_file); asm_file != NULL) {
+        if (strlen(buf) > 50) {
+            fprintf(stderr, "Error: Max chars per line is 49.\n");
+            return 1;
+        }
+        char *comment_start = strchr(buf, '/');
+        
+    }
+
     return 0;
 }
