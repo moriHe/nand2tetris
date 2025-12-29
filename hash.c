@@ -26,6 +26,8 @@ static size_t ht_hash_index(const char *str) {
 const char *ht_insert(const char *str, int value) {
     if (str == NULL)
         return "Error: String is NULL";
+    if (str[0] == '\0')
+        return "Error: Emptsy Label";
     size_t index = ht_hash_index(str);
     size_t counter = 0;
 

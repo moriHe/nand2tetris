@@ -1,13 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "lookup.h"
 #include "instr_processing.h"
+#include "../hash.h"
 
 // TODO: Handle Variables like @i (LOOP) @LOOP
 
+const char *ensure_capacity(size_t *capacity, size_t n, char ***asm_parsed) {
+    if (n < *capacity) 
+        return NULL;
+
+    size_t newcap = *capacity == 0 ? 8 : *capacity * 2;
+    char **tmp_asm_parsed = realloc(*asm_parsed, newcap * sizeof **asm_parsed);
+    if (!tmp_asm_parsed) 
+        return "Error: Realloc asm_parsed.";
+    *asm_parsed = tmp_asm_parsed;
+    *capacity = newcap;
+
+    return NULL;
+}
+
+void remove_comments(char *line) {
+    char *sep = strstr(line, "//");
+    if (sep)
+        *sep = '\0';
+    char *w = line;
+    for (char *p = line; *p; p++) {
+        if (!isspace((unsigned char) *p)) {
+            *w++ = *p;
+        }
+    }
+    *w = '\0';
+}
+
+
 int main(int argc, char *argv[]) {
-    // Input validation Start
+    // Input validation
     if (argc < 2) {
         fprintf(stderr, "Error: no filename provided.\n");
         return 1;
@@ -25,9 +55,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error: wrong file format. File needs to end on .asm.\n");
         return 1;
     }
-    // Input validation Start
 
-    // Load input and output file Start
+    // Load input and output file
     FILE* fptr;
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
@@ -35,85 +64,87 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char filename_body[filename_length + 2];
-    int prefix_len = filename_length - 3; // This includes the "." Cuts of "asm"
-    memcpy(filename_body, filename, prefix_len);
-    memcpy(filename_body + prefix_len, "hack", 5);
+    char **asm_parsed = NULL;
+    char *line = NULL;
+    size_t cap = 0;
+    size_t n = 0;
+    size_t capacity = 0;
     
-    FILE *hack_file = fopen(filename_body, "w");
-    if (hack_file == NULL) {
-        fprintf(stderr, "Error: Initializing hack file.");
-        return 1;
+    while (getline(&line, &cap, fptr) != -1) {
+        const char *err = ensure_capacity(&capacity, n + 2, &asm_parsed);
+        if (err) {
+            fprintf(stderr, "%s\n", err);
+            return 1;
+        }
+        
+        remove_comments(line);
+
+        // Empty line do nothing.
+        if (line[0] == '\0')
+            continue;
+
+        // Persist asm line
+        asm_parsed[n] = strdup(line);
+        if (!asm_parsed[n]) {
+            fprintf(stderr, "Error: Insert line asm_parsed.");
+            return 1;
+        }
+
+        n++;
+        asm_parsed[n] = NULL;
     }
-    // Load input and output file Start
 
-    int ch;                     // Holds the current char from the input file.
-    int first_line = 1;         // First line does not add a newline to the output file. 
-    bool is_comment = false;    // Marks the beginning of a Comment (Identifier: /).
-    bool is_a = false;          // Marks the beginning of an A-Instruction (Identifier: @).
-    int line = 0;               // ++, when a new line was written to thhe hack file.
-    while ((ch = fgetc(fptr)) != EOF) {
+    free(line);
 
-        unsigned char uch = (unsigned char)ch;        
-        bool newline = NEWLINE[uch];
-        if (COMMENT[uch]) {
-            is_comment = true;
-            continue;
-        }
-
-        if (is_comment && !newline) continue;
-
-        // No continue, because there could be an instruction before the comment that needs to be processed.
-        if (is_comment && newline) is_comment = false;
-
-        if (A_INSTR[uch]) {
-            is_a = true;
-            continue;
-        }
-
-        // In each iteration, decides to add 'uch' as the next number of A's decimal value or write the A-Instruction into the output file.
-        if (is_a) {
-            char *error = process_loop_a(uch, &is_a, &first_line, hack_file, &line);
-            if (error == NULL)
-                continue;
-            else {
-                fprintf(stderr, "Error: processing a instruction failed.");
+    int write = 0;
+    for (int read = 0; asm_parsed[read]; read++) {
+        char *line = asm_parsed[read];
+        if (line[0] == '(') {
+            char *end_label = strchr(line + 1, ')');
+            if (end_label) {
+                *end_label = '\0';
+                const char *err = ht_insert(line + 1, write);
+                if (err) {
+                    fprintf(stderr, "Error: Failed to ht_insert, err=%s\n", err);
+                    return 1;
+                }
+            } else {
+                fprintf(stderr, "Error: Label was not properly closed.");
                 return 1;
             }
-        }
-
-        // If is_a is false, a c instruction is processed
-        // In each iteration, when newline writes to 
-        char *error = process_loop_c(uch, &first_line, hack_file, &line);
-        if (error == NULL)
-            continue;
-        else {
-                fprintf(stderr, "Error: processing c instruction failed.");
-                return 1;
+        } else {
+            asm_parsed[write] = asm_parsed[read];
+            write++;
         }
         
     }
+    asm_parsed[write] = NULL;
+    n = write;
 
-    // Write last line of asm file into the hack file. 
-    // Happens if the last line does not end with newline indicator (which is usually the case)
-    if (is_a) {
-        char *error = write_a(&is_a, &first_line, hack_file, &line);
-        if (error != NULL) fprintf(stderr, "Error: processing a after loop");
-    } else {
-        char *error = write_c(&first_line, hack_file, &line);
-        if (error != NULL) fprintf(stderr, "Error: processing c after loop");
+    for (size_t i = 0; asm_parsed[i] != NULL; i++) {
+        printf("i=%zu, asm_parsed=%s\n", i, asm_parsed[i]);
+        char *instr = asm_parsed[i];
+        if (instr[0] == '@') {
+            if (instr[1] == '\0') {
+                fprintf(stderr, "Error: Invalid A-Instruction.");
+                return 1;
+            }
+            
+
+        }
+        // is a instruction? 
+            // is decimal?
+            // is label?
+            // is variable (start at @16)
+        // is c instruction?
     }
 
-    char binary_addr[17] = "";
-    get_binary_addr(binary_addr, line, 0, 0);
-    char address[17] = "";
-    get_address(address, binary_addr);
-    add_line_break(&first_line, hack_file);
-    fprintf(hack_file, "%s", address);
-    add_line_break(&first_line, hack_file);
-    fprintf(hack_file,"%s", "1110101010000111");
-    printf("line=%d\n", line);
-    fclose(hack_file);
+
+    for (size_t i = 0; i < n; i++) 
+        free(asm_parsed[i]);
+    free(asm_parsed);
+
+
     fclose(fptr);
 
     return 0;
