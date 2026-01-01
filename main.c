@@ -3,6 +3,41 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+const int TABLE_SIZE = 10000;
+
+struct entry {
+    char *key;
+    int value;
+    struct entry *next;
+
+};
+
+struct hash_table {
+    struct entry **entries;
+};
+
+unsigned long hash(const char *key) {
+    if (key == NULL)
+        return NULL;
+    
+    unsigned long value = 0;
+    size_t key_len = strlen(key);
+
+    for (size_t i = 0; i <key_len; i++) {
+        value = value * 37 + key[i];
+    }
+
+    value = value % TABLE_SIZE;
+
+    return value;
+}
+
+ht_set(const char *key) {
+    unsigned long h = hash(key);
+    if (h == NULL)
+        return NULL;
+}
+
 int  main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Error: Only one arg allowed -> The path to the asm file.\n");
@@ -43,6 +78,15 @@ int  main(int argc, char *argv[]) {
         total_rows++;
     }
 
+    struct hash_table ht = {.entries = malloc(sizeof(struct entry)) * TABLE_SIZE};
+    for (size_t i = 0; i < TABLE_SIZE; i++) {
+        ht.entries[i]->key = NULL;
+        ht.entries[i]->value = NULL;
+        ht.entries[i]->next = NULL;
+
+    }
+
+    // TODO Whitespace vorher noch entfernen
     for (size_t i = 0; i < total_rows; i++) {
         if (strchr(raw_instr[i], '(')) {
             char *close_label = strrchr(raw_instr[i], ')');
@@ -51,8 +95,14 @@ int  main(int argc, char *argv[]) {
                 return 1;
             }
             *close_label = '\0';
+            if (raw_instr[i][1] == '\0') {
+                fprintf(stderr, "Error: Empty label declaration.");
+                return 1;
+            }
+            
+            hash(raw_instr[i]);
             // TODO: Save in Hash Map. Point to i+1
-            printf("label = %s", raw_instr[i]);
+            printf("label = %s\n", &raw_instr[i][1]);
         }
     }
 
