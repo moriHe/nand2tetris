@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h> 
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
@@ -16,9 +17,17 @@ struct hash_table {
     struct entry **entries;
 };
 
-unsigned long hash(const char *key) {
-    if (key == NULL)
-        return NULL;
+struct hash_resp {
+    char *err;
+    unsigned long value;
+};
+
+struct hash_resp hash(const char *key) {
+    struct hash_resp resp = {NULL, 0};
+    if (key == NULL) {
+        resp.err = "Error: No key passed to hash function.";
+        return resp;
+    }
     
     unsigned long value = 0;
     size_t key_len = strlen(key);
@@ -28,14 +37,38 @@ unsigned long hash(const char *key) {
     }
 
     value = value % TABLE_SIZE;
-
-    return value;
+    resp.value = value;
+    return resp;
 }
 
-ht_set(const char *key) {
-    unsigned long h = hash(key);
-    if (h == NULL)
-        return NULL;
+
+struct hash_resp ht_set(const char *key, struct hash_table *ht) {
+    struct hash_resp h_resp = hash(key);
+
+    if (h_resp.err != NULL)
+        return h_resp;
+    struct entry *entry =  malloc(sizeof(struct entry));
+    size_t len = strlen(key);
+    char *copy = malloc(len + 1);
+    memcpy(copy, key, len + 1);
+    entry->key = copy;
+    entry->value = 2;
+    entry->next = NULL;
+    ht->entries[h_resp.value] = entry;
+
+    return h_resp;
+}
+
+struct entry *ht_get(const char *key, struct hash_table *ht) {
+    struct hash_resp h_resp = hash(key);
+    if (h_resp.err != NULL) {
+        printf("Error was not null.\n");
+                return NULL;
+    }
+    printf("h_respvalue=%ld\n", h_resp.value);
+    struct entry *entry = ht->entries[h_resp.value];
+    
+    return entry;
 }
 
 int  main(int argc, char *argv[]) {
@@ -77,13 +110,11 @@ int  main(int argc, char *argv[]) {
         strcpy(raw_instr[total_rows], buf);
         total_rows++;
     }
+    struct hash_table ht = {.entries = calloc(TABLE_SIZE, sizeof(struct entry*))};
 
-    struct hash_table ht = {.entries = malloc(sizeof(struct entry)) * TABLE_SIZE};
-    for (size_t i = 0; i < TABLE_SIZE; i++) {
-        ht.entries[i]->key = NULL;
-        ht.entries[i]->value = NULL;
-        ht.entries[i]->next = NULL;
-
+    if (ht.entries == NULL) {
+        fprintf(stderr, "Error: Failed to alloc memory for hash table.");
+        return 1;
     }
 
     // TODO Whitespace vorher noch entfernen
@@ -91,20 +122,31 @@ int  main(int argc, char *argv[]) {
         if (strchr(raw_instr[i], '(')) {
             char *close_label = strrchr(raw_instr[i], ')');
             if (close_label == NULL) {
-                fprintf(stderr, "Error: Row at index %ld does not clsoe the label.", i);
+                fprintf(stderr, "Error: Row at index %ld does not clsoe the label.\n", i);
                 return 1;
             }
-            *close_label = '\0';
+
             if (raw_instr[i][1] == '\0') {
                 fprintf(stderr, "Error: Empty label declaration.");
                 return 1;
             }
-            
-            hash(raw_instr[i]);
-            // TODO: Save in Hash Map. Point to i+1
-            printf("label = %s\n", &raw_instr[i][1]);
+            ht_set(raw_instr[i], &ht);
+            // TODO: Make this in one loop to skip putting in array
         }
     }
 
+    for (size_t i = 0; i < total_rows; i++) {
+        if (strchr(raw_instr[i], '(')) {
+            if (raw_instr[i][1] == '\0') {
+                fprintf(stderr, "Error: Empty label declaration.");
+                return 1;
+            }
+                struct entry *entry = ht_get(raw_instr[i], &ht);
+                if (entry != NULL) {
+                    printf("not null\n");
+                    printf("value=%d, key=%s\n", entry->value, entry->key);
+                }
+        }
+    }
     return 0;
 }
