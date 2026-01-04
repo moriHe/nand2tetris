@@ -1,6 +1,7 @@
 // Hello World
-D+M // Test
-
-@10
 (LOOP)
+D+M // Test
+(WHILE)
+@10
+(END)
 D;JMP
