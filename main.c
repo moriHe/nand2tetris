@@ -181,8 +181,10 @@ int  main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: Label at index %ld does not clsoe the label.\n", raw_file_idx);
                 return 1;
             }
+            *close_label = '\0';
+            ;
             // TODO: What about if two labels are declared in succession? The first would point to the second? How does this behave? Do I need to handle that?
-            ht_set(buf_no_whitespace, total_rows, &ht);
+            ht_set(&buf_no_whitespace[1], total_rows, &ht);
             continue;
         }
         strcpy(raw_instr[total_rows], buf_no_whitespace);
