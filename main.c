@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-const int TABLE_SIZE = 12;
+const int TABLE_SIZE = 10000;
 
 struct entry {
     char *key;
@@ -188,11 +188,30 @@ int  main(int argc, char *argv[]) {
             continue;
         }
         strcpy(raw_instr[total_rows], buf_no_whitespace);
-        printf("row=%s, total=%ld\n", buf_no_whitespace, total_rows);
         total_rows++;
     }
+    
+    printf("total_rows=%zu\n", total_rows);
+    for (size_t i=0; i < total_rows; i++) {
+        printf("row=%s -> ", raw_instr[i]);
+        if (raw_instr[i][0] == '@') {
+            // TODO: Check if Label. Get value from hashmap if so
+            // TODO: Check if variable. I dont handle that case yet. 
+            // Stack in nand2tetris starts at 16. So i d need to keep track of this. the first @ something uses value 16 converted to its binary addr
+            // Each new variable gets 17, 18, ... 
+            // If already present uses that binary address. If not present, stores in array or whatever and uses the binary address
+            // Something Something like that
 
-    struct entry *e = ht_get("(HOOP)", &ht);
-    ht_dump(&ht);
+            // TODO: Normal dec values get converted to binary straight away.
+
+            // Helpers -> Dec -> Binary, 
+            // Note -> i could compute the binary address in ht_set for labels. Would need some type changes in the struct. But helper Dec-> Binary is useable. 
+            // Something for later when everything is finished
+            printf("A-Address, value=%s\n", &raw_instr[i][1]);
+        } else {
+            printf("C-Address\n");
+        }
+    }
+
     return 0;
 }
