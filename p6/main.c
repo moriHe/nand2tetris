@@ -103,6 +103,28 @@ struct entry *ht_get(const char *key, struct hash_table *ht) {
     return entry;
 }
 
+void dec_to_binary(int dec) {
+    if (dec < 0 || dec > 32767) {
+        // TODO: Handle Error
+        return;
+    }
+    int binary[15] = {0};
+
+    int i = 0;
+    while (dec > 0) {
+        binary[i] = dec % 2;
+        dec = dec / 2;
+        i++;
+    }
+    char binary_str[17];
+    binary_str[16] = '\0';
+    binary_str[0] = '0'; // Identifies row as A-Instruction
+    for (int j = 15; j > 0; j--)
+        binary_str[j] = (char)binary[j];
+    
+    printf("binary_str=%s\n", binary_str);
+}
+
 void ht_dump(struct hash_table *ht) {
     for (size_t i = 0; i < TABLE_SIZE; i++) {
         printf("ht at i=%zu: ", i);
@@ -190,7 +212,7 @@ int  main(int argc, char *argv[]) {
         strcpy(raw_instr[total_rows], buf_no_whitespace);
         total_rows++;
     }
-    
+    dec_to_binary(20);
     printf("total_rows=%zu\n", total_rows);
     int reg_idx = 0;
     for (size_t i=0; i < total_rows; i++) {
