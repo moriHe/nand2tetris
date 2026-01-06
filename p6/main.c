@@ -192,22 +192,28 @@ int  main(int argc, char *argv[]) {
     }
     
     printf("total_rows=%zu\n", total_rows);
+    int reg_idx = 0;
     for (size_t i=0; i < total_rows; i++) {
         printf("row=%s -> ", raw_instr[i]);
         if (raw_instr[i][0] == '@') {
-            // TODO: Check if Label. Get value from hashmap if so
-            // TODO: Check if variable. I dont handle that case yet. 
-            // Stack in nand2tetris starts at 16. So i d need to keep track of this. the first @ something uses value 16 converted to its binary addr
-            // Each new variable gets 17, 18, ... 
-            // If already present uses that binary address. If not present, stores in array or whatever and uses the binary address
-            // Something Something like that
-
-            // TODO: Normal dec values get converted to binary straight away.
-
-            // Helpers -> Dec -> Binary, 
-            // Note -> i could compute the binary address in ht_set for labels. Would need some type changes in the struct. But helper Dec-> Binary is useable. 
-            // Something for later when everything is finished
-            printf("A-Address, value=%s\n", &raw_instr[i][1]);
+            printf("A-Address, value=%s, ", &raw_instr[i][1]);
+            const char *instr = &raw_instr[i][1];
+            struct entry *entry = ht_get(instr, &ht);
+            char *end = NULL;
+            if (entry != NULL) {
+                printf("It s a label, key=%s, value=%d", entry->key, entry->value);
+                // TODO: Compute binary Address from entry->value
+            } else if (strtol(instr, &end, 10))  {
+                printf("I'm a number.");
+                // TODO: Compute binary Address from isntr
+            } else {
+                printf("I'm a variable");
+                // TODO: Variable. Check if it is hashed. If yes, get the entry->value
+                // If not: invoke ht_set. The value starts with the decimal 16 for the first Register in Nand2Tetris.
+                // Use that decimal to compute Address. Increment decimal for the next occuring variable
+            }
+            printf("\n");
+            
         } else {
             printf("C-Address\n");
         }

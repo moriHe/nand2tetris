@@ -1,7 +1,9 @@
 // Hello World
 (LOOP)
 D+M // Test
-(WHILE)
 @10
-(END)
+A=M;
+@i
+M=D+1;
+@LOOP
 D;JMP
