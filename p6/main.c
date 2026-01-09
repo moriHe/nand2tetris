@@ -283,35 +283,33 @@ int  main(int argc, char *argv[]) {
 
     int reg_idx = 16;
     for (size_t i=0; i < total_rows; i++) {
-        //printf("row=%s -> ", raw_instr[i]);
         if (raw_instr[i][0] == '@') {
             const char *instr = &raw_instr[i][1];
-            printf("A-Address, value=%s, ", &raw_instr[i][1]);
             struct entry *entry = ht_get(instr, &ht);
             char a_str[17];
             int a_value;
             char *end = NULL;
             if (entry != NULL) {
-                printf("It s a label, key=%s, value=%d", entry->key, entry->value);
                 a_value = entry->value;
                 // TODO: Compute binary Address from entry->value
             } else if (strtol(instr, &end, 10))  {
-                printf("I'm a number.");
                 a_value = strtol(instr, &end, 10);
-                // TODO: Compute binary Address from isntr
             } else {
-                printf("I'm a variable");
                 ht_set(instr, reg_idx, &ht);
                 a_value = reg_idx;
                 // TODO: Check if failed befor reg_idx can be upped. Though if failed. The whole program should fail so needs to be implemented too?
                 reg_idx++;
             }
             dec_to_binary(a_value, a_str);
-            printf(" -> a_str=%s\n", a_str);
+            printf(" A Instr=%s\n", a_str);
             printf("\n");
             
         } else {
             // [dest=]comp[;jump] -> dest and jump are optional
+            char c_str[17];
+            char dest_val[4] = "000";
+            char comp_val[8];
+            char jmp_val[4] = "000";
             char *next = &raw_instr[i][0];
             char *equal_sign = strchr(next, '=');
             if (equal_sign) {
@@ -319,19 +317,41 @@ int  main(int argc, char *argv[]) {
                 // Store dest or write it in the final c instr already
                 // next = equal_sign + 1 
                 // use strncpy maybe?
-                printf("next1=%s | ", next);
+                //     snprintf(out, 17, "111%.7s%.3s%.3s", mid, sfxA, sfxB);
+
                 *equal_sign = '\0';
                 for (int i = 0; i < num_dest; i++) {
                     if (strcmp(dest[i].key, next) == 0) {
-                        printf("dest=%s, bin=%s | ", dest[i].key, dest[i].value);
+                        strcpy(dest_val, dest[i].value);
                     }
                 }
-                printf("next2=%s | ", next);
                 next = equal_sign + 1;
             }
             char *semicolon = strchr(next, ';');
-            printf("next3=%s\n", next);
-            printf("C-Address\n");
+            if (semicolon) {
+                *semicolon = '\0';
+                for (int i = 0; i < num_comp; i++) {
+                    // TODO: If none is a hit, it s a invalid c instruction
+                    if (strcmp(comp[i].key, next) == 0) {
+                        strcpy(comp_val, comp[i].value);
+                    }
+                }
+                next = semicolon + 1;
+                for (int i = 0; i < num_jump; i++) {
+                    if (strcmp(jump[i].key, next) == 0) {
+                        strcpy(jmp_val, jump[i].value);
+                    }
+                }
+            } else {
+                for (int i = 0; i < num_comp; i++) {
+                    // TODO: If none is a hit, it s a invalid c instruction
+                    if (strcmp(comp[i].key, next) == 0) {
+                        strcpy(comp_val, comp[i].value);
+                    }
+                }
+            }
+            snprintf(c_str, sizeof(c_str), "111%s%s%s", comp_val, dest_val, jmp_val);
+            printf("C Instr=%s\n", c_str);
         }
     }
 

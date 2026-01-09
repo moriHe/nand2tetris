@@ -11,3 +11,7 @@ M=D+1;
 A=M;
 @LOOP
 A=D;JMP
+@4
+M=D
+@5
+M

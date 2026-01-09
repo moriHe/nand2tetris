@@ -1,0 +1,5 @@
+M=D;JLE
+!D
+D+1
+A=M-1;JMP
+M=!M
