@@ -184,6 +184,8 @@ static const struct c_instr comp[] = {
     {"D|M", "1010101"},
 };
 
+int num_comp = sizeof(comp) / sizeof(comp[0]);
+
 static const struct c_instr jump[] = {
     {"",    "000"},
     {"JGT", "001"},
@@ -195,6 +197,8 @@ static const struct c_instr jump[] = {
     {"JMP", "111"},
 };
 
+int num_jump = sizeof(jump) / sizeof(jump[0]);
+
 static const struct c_instr dest[] = {
     {"",    "000"},
     {"M",   "001"},
@@ -205,6 +209,8 @@ static const struct c_instr dest[] = {
     {"AD",  "110"},
     {"AMD", "111"},
 };
+
+int num_dest = sizeof(dest) / sizeof(dest[0]);
 
 int  main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -315,6 +321,11 @@ int  main(int argc, char *argv[]) {
                 // use strncpy maybe?
                 printf("next1=%s | ", next);
                 *equal_sign = '\0';
+                for (int i = 0; i < num_dest; i++) {
+                    if (strcmp(dest[i].key, next) == 0) {
+                        printf("dest=%s, bin=%s | ", dest[i].key, dest[i].value);
+                    }
+                }
                 printf("next2=%s | ", next);
                 next = equal_sign + 1;
             }
