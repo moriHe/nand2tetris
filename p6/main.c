@@ -103,10 +103,10 @@ struct entry *ht_get(const char *key, struct hash_table *ht) {
     return entry;
 }
 
-void dec_to_binary(int dec) {
+void dec_to_binary(int dec, char s[17]) {
     if (dec < 0 || dec > 32767) {
         // TODO: Handle Error
-        return;
+        return ;
     }
     int binary[15] = {0};
 
@@ -116,13 +116,15 @@ void dec_to_binary(int dec) {
         dec = dec / 2;
         i++;
     }
-    char binary_str[17];
-    binary_str[16] = '\0';
-    binary_str[0] = '0'; // Identifies row as A-Instruction
-    for (int j = 15; j > 0; j--)
-        binary_str[j] = (char)binary[j];
-    
-    printf("binary_str=%s\n", binary_str);
+
+    s[16] = '\0';
+    s[0] = '0'; // Identifies row as A-Instruction
+    int k = 0;
+    for (int j = 15; j > 0; j--) {
+        s[j] = binary[15-j] == 0 ? '0' : '1';
+        k++;
+    }
+    return;
 }
 
 void ht_dump(struct hash_table *ht) {
@@ -143,6 +145,66 @@ void ht_dump(struct hash_table *ht) {
         printf("\n");
     }
 }
+
+struct c_instr {
+    const char *key;
+    const char *value;
+};
+
+static const struct c_instr comp[] = {
+    {"0",   "0101010"},
+    {"1",   "0111111"},
+    {"-1",  "0111010"},
+    {"D",   "0001100"},
+    {"A",   "0110000"},
+    {"!D",  "0001101"},
+    {"!A",  "0110001"},
+    {"-D",  "0001111"},
+    {"-A",  "0110011"},
+    {"D+1", "0011111"},
+    {"A+1", "0110111"},
+    {"D-1", "0001110"},
+    {"A-1", "0110010"},
+    {"D+A", "0000010"},
+    {"D-A", "0010011"},
+    {"A-D", "0000111"},
+    {"D&A", "0000000"},
+    {"D|A", "0010101"},
+
+    // a = 1 (M memory based)
+    {"M",   "1110000"},
+    {"!M",  "1110001"},
+    {"-M",  "1110011"},
+    {"M+1", "1110111"},
+    {"M-1", "1110010"},
+    {"D+M", "1000010"},
+    {"D-M", "1010011"},
+    {"M-D", "1000111"},
+    {"D&M", "1000000"},
+    {"D|M", "1010101"},
+};
+
+static const struct c_instr jump[] = {
+    {"",    "000"},
+    {"JGT", "001"},
+    {"JEQ", "010"},
+    {"JGE", "011"},
+    {"JLT", "100"},
+    {"JNE", "101"},
+    {"JLE", "110"},
+    {"JMP", "111"},
+};
+
+static const struct c_instr dest[] = {
+    {"",    "000"},
+    {"M",   "001"},
+    {"D",   "010"},
+    {"MD",  "011"},
+    {"A",   "100"},
+    {"AM",  "101"},
+    {"AD",  "110"},
+    {"AMD", "111"},
+};
 
 int  main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -212,31 +274,52 @@ int  main(int argc, char *argv[]) {
         strcpy(raw_instr[total_rows], buf_no_whitespace);
         total_rows++;
     }
-    dec_to_binary(20);
-    printf("total_rows=%zu\n", total_rows);
-    int reg_idx = 0;
+
+    int reg_idx = 16;
     for (size_t i=0; i < total_rows; i++) {
-        printf("row=%s -> ", raw_instr[i]);
+        //printf("row=%s -> ", raw_instr[i]);
         if (raw_instr[i][0] == '@') {
-            printf("A-Address, value=%s, ", &raw_instr[i][1]);
             const char *instr = &raw_instr[i][1];
+            printf("A-Address, value=%s, ", &raw_instr[i][1]);
             struct entry *entry = ht_get(instr, &ht);
+            char a_str[17];
+            int a_value;
             char *end = NULL;
             if (entry != NULL) {
                 printf("It s a label, key=%s, value=%d", entry->key, entry->value);
+                a_value = entry->value;
                 // TODO: Compute binary Address from entry->value
             } else if (strtol(instr, &end, 10))  {
                 printf("I'm a number.");
+                a_value = strtol(instr, &end, 10);
                 // TODO: Compute binary Address from isntr
             } else {
                 printf("I'm a variable");
-                // TODO: Variable. Check if it is hashed. If yes, get the entry->value
-                // If not: invoke ht_set. The value starts with the decimal 16 for the first Register in Nand2Tetris.
-                // Use that decimal to compute Address. Increment decimal for the next occuring variable
+                ht_set(instr, reg_idx, &ht);
+                a_value = reg_idx;
+                // TODO: Check if failed befor reg_idx can be upped. Though if failed. The whole program should fail so needs to be implemented too?
+                reg_idx++;
             }
+            dec_to_binary(a_value, a_str);
+            printf(" -> a_str=%s\n", a_str);
             printf("\n");
             
         } else {
+            // [dest=]comp[;jump] -> dest and jump are optional
+            char *next = &raw_instr[i][0];
+            char *equal_sign = strchr(next, '=');
+            if (equal_sign) {
+                // TODO: Look up dest
+                // Store dest or write it in the final c instr already
+                // next = equal_sign + 1 
+                // use strncpy maybe?
+                printf("next1=%s | ", next);
+                *equal_sign = '\0';
+                printf("next2=%s | ", next);
+                next = equal_sign + 1;
+            }
+            char *semicolon = strchr(next, ';');
+            printf("next3=%s\n", next);
             printf("C-Address\n");
         }
     }
