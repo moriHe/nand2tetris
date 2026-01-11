@@ -238,37 +238,34 @@ int  main(int argc, char *argv[]) {
     // TODO: Make it more dynamic
     char raw_instr[50][50];
     size_t total_rows = 0;
-    size_t raw_file_idx = -1;
-    for (char buf[50]; fgets(buf, sizeof buf, asm_file); asm_file != NULL) {
+    int raw_file_idx = -1;
+    for (char buf[4096]; fgets(buf, sizeof buf, asm_file); asm_file != NULL) {
         raw_file_idx++;
-        if (strlen(buf) > 50) {
-            fprintf(stderr, "Error: Max chars per line is 49.\n");
-            return 1;
-        }
 
         char *comment_start = strstr(buf, "//");
 
         if (comment_start)
             *comment_start = '\0';
 
-            size_t buf_len = strlen(buf);
+        size_t buf_len = strlen(buf);
         char buf_no_whitespace[50] = {'\0'};
         int idx = 0;
         for (size_t j = 0; j < buf_len; j++) {
-            if (isspace(buf[j]))
+            if (isspace(buf[j]) != 0)
                 continue;
             buf_no_whitespace[idx] = buf[j];
             idx++;
         }
 
         buf_no_whitespace[idx] = '\0';
-        if (isspace(buf_no_whitespace[0]) || buf[0] == '\0')
+
+        if (idx == 0)
             continue;
 
         if (strchr(buf_no_whitespace, '(')) {
             char *close_label = strrchr(buf_no_whitespace, ')');
             if (close_label == NULL) {
-                fprintf(stderr, "Error: Label at index %ld does not clsoe the label.\n", raw_file_idx);
+                fprintf(stderr, "Error: Label at index %d does not clsoe the label.\n", raw_file_idx);
                 return 1;
             }
             *close_label = '\0';
@@ -282,6 +279,9 @@ int  main(int argc, char *argv[]) {
     }
 
     int reg_idx = 16;
+    FILE *hack = fopen("./test_files/file.hack", "w");
+    // TODO: name hack file after input file
+    // TODO: @0 gives address 16. There must be something wrong with a check
     for (size_t i=0; i < total_rows; i++) {
         if (raw_instr[i][0] == '@') {
             const char *instr = &raw_instr[i][1];
@@ -301,9 +301,7 @@ int  main(int argc, char *argv[]) {
                 reg_idx++;
             }
             dec_to_binary(a_value, a_str);
-            printf(" A Instr=%s\n", a_str);
-            printf("\n");
-            
+            fprintf(hack, "%s\n", a_str);
         } else {
             // [dest=]comp[;jump] -> dest and jump are optional
             char c_str[17];
@@ -350,8 +348,7 @@ int  main(int argc, char *argv[]) {
                     }
                 }
             }
-            snprintf(c_str, sizeof(c_str), "111%s%s%s", comp_val, dest_val, jmp_val);
-            printf("C Instr=%s\n", c_str);
+        fprintf(hack, "111%s%s%s\n", comp_val, dest_val, jmp_val);
         }
     }
 
