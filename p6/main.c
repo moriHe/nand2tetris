@@ -219,11 +219,20 @@ int  main(int argc, char *argv[]) {
     }
     
     const char *file_path = argv[1];
-    const char *file_sep = strrchr(file_path, '.');
+    char *path_copy = strdup(file_path);
+    char *file_sep = strrchr(path_copy, '.');
     if (strcmp(".asm", file_sep) != 0) {
         fprintf(stderr, "Error: Wrong file identifier.\n");
         return 1;
     }
+    
+    *file_sep ='\0';
+    char *asm_name = strrchr(path_copy, '/');
+    asm_name++;
+    size_t len = strlen(asm_name) + 6;
+    char *hack_name = malloc(len);
+    snprintf(hack_name, len, "%s.hack", asm_name);
+    printf("len=%ld, asm_name=%s, file_name=%s\n",len, asm_name, hack_name);
 
     FILE *asm_file = fopen(file_path, "r");
     if (asm_file == NULL) {
@@ -279,7 +288,7 @@ int  main(int argc, char *argv[]) {
     }
 
     int reg_idx = 16;
-    FILE *hack = fopen("./test_files/file.hack", "w");
+    FILE *hack = fopen(hack_name, "w");
     // TODO: name hack file after input file
     // TODO: @0 gives address 16. There must be something wrong with a check
     for (size_t i=0; i < total_rows; i++) {
