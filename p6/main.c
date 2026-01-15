@@ -244,6 +244,11 @@ int  main(int argc, char *argv[]) {
         fprintf(stderr, "Error: Failed to alloc memory for hash table.");
         return 1;
     }
+    
+    ht_set("R0", 0, &ht);
+    ht_set("R1", 1, &ht);
+    ht_set("R2", 2, &ht);
+
     // TODO: Make it more dynamic
     char raw_instr[50][50];
     size_t total_rows = 0;
