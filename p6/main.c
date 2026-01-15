@@ -238,7 +238,9 @@ int  main(int argc, char *argv[]) {
     if (asm_file == NULL) {
         fprintf(stderr, "Error: Could not open the file. Is the path correct?");
     }
-
+    // TODO: Segfault in Pong. Thought it would be AM, AD, AMD not being accounted for but they should already be. I need to investigate that
+    // The printf("test") does not get printed. pritnf("len=%ld...") above gets printed. So something with opening the file?
+    printf("test");
     struct hash_table ht = {.entries = calloc(TABLE_SIZE, sizeof(struct entry*))};
     if (ht.entries == NULL) {
         fprintf(stderr, "Error: Failed to alloc memory for hash table.");
@@ -253,7 +255,6 @@ int  main(int argc, char *argv[]) {
     char raw_instr[50][50];
     size_t total_rows = 0;
     int raw_file_idx = -1;
-    // TODO: Segfault in Pong. Thought it would be AM, AD, AMD not being accounted for but they should already be. I need to investigate that
     for (char buf[4096]; fgets(buf, sizeof buf, asm_file); asm_file != NULL) {
         raw_file_idx++;
 
