@@ -244,7 +244,7 @@ int  main(int argc, char *argv[]) {
         fprintf(stderr, "Error: Failed to alloc memory for hash table.");
         return 1;
     }
-    
+
     ht_set("R0", 0, &ht);
     ht_set("R1", 1, &ht);
     ht_set("R2", 2, &ht);
@@ -253,6 +253,8 @@ int  main(int argc, char *argv[]) {
     char raw_instr[50][50];
     size_t total_rows = 0;
     int raw_file_idx = -1;
+    // TODO: Account for multiple dests in a row
+    // AM=, MD=, AD=, AMD= are all valid
     for (char buf[4096]; fgets(buf, sizeof buf, asm_file); asm_file != NULL) {
         raw_file_idx++;
 
