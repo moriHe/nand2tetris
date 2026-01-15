@@ -289,7 +289,6 @@ int  main(int argc, char *argv[]) {
 
     int reg_idx = 16;
     FILE *hack = fopen(hack_name, "w");
-    // TODO: name hack file after input file
     // TODO: @0 gives address 16. There must be something wrong with a check
     for (size_t i=0; i < total_rows; i++) {
         if (raw_instr[i][0] == '@') {
@@ -298,11 +297,12 @@ int  main(int argc, char *argv[]) {
             char a_str[17];
             int a_value;
             char *end = NULL;
+            long intvalue = strtol(instr, &end, 10);
             if (entry != NULL) {
                 a_value = entry->value;
                 // TODO: Compute binary Address from entry->value
-            } else if (strtol(instr, &end, 10))  {
-                a_value = strtol(instr, &end, 10);
+            } else if (end != instr && *end == '\0')  {
+                a_value = intvalue;
             } else {
                 ht_set(instr, reg_idx, &ht);
                 a_value = reg_idx;
