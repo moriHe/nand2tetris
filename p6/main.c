@@ -87,12 +87,14 @@ struct entry *ht_get(const char *key, struct hash_table *ht) {
         printf("Error was not null.\n");
                 return NULL;
     }
+
     struct entry *entry = ht->entries[h_resp.value];
     if (entry == NULL)
         return NULL;
-    
+
     bool found = false;
     while (!found) {
+        printf("key=%s, entrykey=%s\n", key, entry->key);
         if (strcmp(entry->key, key) == 0) {
             found = true;
             break;
@@ -232,15 +234,13 @@ int  main(int argc, char *argv[]) {
     size_t len = strlen(asm_name) + 6;
     char *hack_name = malloc(len);
     snprintf(hack_name, len, "%s.hack", asm_name);
-    printf("len=%ld, asm_name=%s, file_name=%s\n",len, asm_name, hack_name);
 
     FILE *asm_file = fopen(file_path, "r");
+
     if (asm_file == NULL) {
         fprintf(stderr, "Error: Could not open the file. Is the path correct?");
     }
-    // TODO: Segfault in Pong. Thought it would be AM, AD, AMD not being accounted for but they should already be. I need to investigate that
-    // The printf("test") does not get printed. pritnf("len=%ld...") above gets printed. So something with opening the file?
-    printf("test");
+
     struct hash_table ht = {.entries = calloc(TABLE_SIZE, sizeof(struct entry*))};
     if (ht.entries == NULL) {
         fprintf(stderr, "Error: Failed to alloc memory for hash table.");
@@ -252,14 +252,14 @@ int  main(int argc, char *argv[]) {
     ht_set("R2", 2, &ht);
 
     // TODO: Make it more dynamic
-    char raw_instr[50][50];
+    int capacity = 512;
+    char (*raw_instr)[50] = malloc(capacity * sizeof(*raw_instr));
     size_t total_rows = 0;
     int raw_file_idx = -1;
     for (char buf[4096]; fgets(buf, sizeof buf, asm_file); asm_file != NULL) {
         raw_file_idx++;
 
         char *comment_start = strstr(buf, "//");
-
         if (comment_start)
             *comment_start = '\0';
 
@@ -273,6 +273,7 @@ int  main(int argc, char *argv[]) {
             idx++;
         }
 
+
         buf_no_whitespace[idx] = '\0';
 
         if (idx == 0)
@@ -285,10 +286,18 @@ int  main(int argc, char *argv[]) {
                 return 1;
             }
             *close_label = '\0';
-            ;
             // TODO: What about if two labels are declared in succession? The first would point to the second? How does this behave? Do I need to handle that?
             ht_set(&buf_no_whitespace[1], total_rows, &ht);
             continue;
+        }
+        if (capacity - total_rows <= 0) {
+            capacity = capacity * 2;
+            void *temp = realloc(raw_instr, capacity * sizeof(*raw_instr));
+            if (temp == NULL) {
+                fprintf(stderr, "Error: Realloc raw_instr failed.");
+                return 1;
+            }
+            raw_instr = temp;
         }
         strcpy(raw_instr[total_rows], buf_no_whitespace);
         total_rows++;
@@ -298,6 +307,7 @@ int  main(int argc, char *argv[]) {
     FILE *hack = fopen(hack_name, "w");
     // TODO: @0 gives address 16. There must be something wrong with a check
     for (size_t i=0; i < total_rows; i++) {
+        printf("i=%ld, raw_instr=%s\n", i, raw_instr[i]);
         if (raw_instr[i][0] == '@') {
             const char *instr = &raw_instr[i][1];
             struct entry *entry = ht_get(instr, &ht);
