@@ -247,11 +247,12 @@ int  main(int argc, char *argv[]) {
         return 1;
     }
 
-    ht_set("R0", 0, &ht);
-    ht_set("R1", 1, &ht);
-    ht_set("R2", 2, &ht);
-
-    // TODO: Make it more dynamic
+    char r_key[4];
+    for (int i = 0; i < 16; i++) {
+    snprintf(r_key, sizeof(r_key), "R%d", i);
+    ht_set(r_key, i, &ht);
+    };
+    
     int capacity = 512;
     char (*raw_instr)[50] = malloc(capacity * sizeof(*raw_instr));
     size_t total_rows = 0;
