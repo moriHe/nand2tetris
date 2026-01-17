@@ -94,11 +94,6 @@ struct entry *ht_get(const char *key, struct hash_table *ht) {
 
     bool found = false;
     while (!found) {
-        // TODO: Segfaulted because I did not have a break mechanism on miss.
-        // Though I wonder why it misses. Happens at idx 4 with @133 Instruction.
-        // Is this handled as a variable from my code and get hashed? Wouldnt be the correct behaviour
-        // Though the final result works, since it gets compiled correctly.
-        // Or is it just a generic search that happens for each A-Instr? Could be optimized then. Need to investigate
         if (entry == NULL)
             break;
         if (strcmp(entry->key, key) == 0) {
@@ -319,7 +314,6 @@ int  main(int argc, char *argv[]) {
 
     int reg_idx = 16;
     FILE *hack = fopen(hack_name, "w");
-    // TODO: @0 gives address 16. There must be something wrong with a check
     for (size_t i=0; i < total_rows; i++) {
         if (raw_instr[i][0] == '@') {
             const char *instr = &raw_instr[i][1];
@@ -328,9 +322,9 @@ int  main(int argc, char *argv[]) {
             int a_value;
             char *end = NULL;
             long intvalue = strtol(instr, &end, 10);
+            // TODO: Fist check if intvalue, then do te ht_get in an enclosed. 1) Minimized misses, 2) The if and the else block can be somewhat merged together
             if (entry != NULL) {
                 a_value = entry->value;
-                // TODO: Compute binary Address from entry->value
             } else if (end != instr && *end == '\0')  {
                 a_value = intvalue;
             } else {
