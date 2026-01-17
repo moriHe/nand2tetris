@@ -94,7 +94,13 @@ struct entry *ht_get(const char *key, struct hash_table *ht) {
 
     bool found = false;
     while (!found) {
-        printf("key=%s, entrykey=%s\n", key, entry->key);
+        // TODO: Segfaulted because I did not have a break mechanism on miss.
+        // Though I wonder why it misses. Happens at idx 4 with @133 Instruction.
+        // Is this handled as a variable from my code and get hashed? Wouldnt be the correct behaviour
+        // Though the final result works, since it gets compiled correctly.
+        // Or is it just a generic search that happens for each A-Instr? Could be optimized then. Need to investigate
+        if (entry == NULL)
+            break;
         if (strcmp(entry->key, key) == 0) {
             found = true;
             break;
@@ -252,7 +258,14 @@ int  main(int argc, char *argv[]) {
     snprintf(r_key, sizeof(r_key), "R%d", i);
     ht_set(r_key, i, &ht);
     };
-    
+    ht_set("SP", 0, &ht);
+    ht_set("LCL", 1, &ht);
+    ht_set("ARG", 2, &ht);
+    ht_set("THIS", 3, &ht);
+    ht_set("THAT", 4, &ht);
+    ht_set("SCREEN", 16384, &ht);
+    ht_set("KBD", 24576, &ht);
+
     int capacity = 512;
     char (*raw_instr)[50] = malloc(capacity * sizeof(*raw_instr));
     size_t total_rows = 0;
@@ -308,7 +321,6 @@ int  main(int argc, char *argv[]) {
     FILE *hack = fopen(hack_name, "w");
     // TODO: @0 gives address 16. There must be something wrong with a check
     for (size_t i=0; i < total_rows; i++) {
-        printf("i=%ld, raw_instr=%s\n", i, raw_instr[i]);
         if (raw_instr[i][0] == '@') {
             const char *instr = &raw_instr[i][1];
             struct entry *entry = ht_get(instr, &ht);
