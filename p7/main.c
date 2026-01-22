@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <stdbool.h>
 /*
 Project 7 of Nand2Tetris.
 * Goal: 
@@ -55,6 +55,36 @@ See PDF 95 onward
 VMTranslator
 Main - Drives the Parser and CodeWriter
 */
+
+struct Parser {
+    FILE *input_file;
+    char *current_command;
+    int current_index;
+};
+
+void advance(struct Parser *parser) {
+    char *next = malloc(4096);
+    char *tmp = NULL;
+    while (tmp == NULL) {
+        fgets(next, sizeof next, parser->input_file);
+        tmp = next;
+        char *comment_start = strstr(tmp, "//");
+        if (comment_start)
+            *comment_start = '\0';
+
+        // TODO: Trim whitespace left and right
+
+        if (tmp[0] == '\0') {
+            tmp = NULL;
+            continue;
+        }
+    }
+    printf("next=%s\n", next);
+    parser->current_command = next;
+    // Advance index
+    parser->current_index++;
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Error: Expected 1 arg (file path), got %d instead.\n", argc);
