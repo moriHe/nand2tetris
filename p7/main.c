@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 /*
 Project 7 of Nand2Tetris.
 * Goal: 
@@ -58,31 +59,56 @@ Main - Drives the Parser and CodeWriter
 
 struct Parser {
     FILE *input_file;
+    char *raw;
     char *current_command;
-    int current_index;
+    int current_index; // needs to start at -1
+    bool has_more_lines;
 };
 
 void advance(struct Parser *parser) {
-    char *next = malloc(4096);
-    char *tmp = NULL;
-    while (tmp == NULL) {
-        fgets(next, sizeof next, parser->input_file);
-        tmp = next;
-        char *comment_start = strstr(tmp, "//");
+    int BUFFER_SIZE = 4096;
+    char *raw = malloc(BUFFER_SIZE);
+    char *next = NULL;
+    while (next == NULL) {
+        next = raw;
+        if (fgets(raw, BUFFER_SIZE, parser->input_file) == NULL) {
+            parser->has_more_lines = false;
+            break;
+        }
+        char *comment_start = strstr(next, "//");
         if (comment_start)
             *comment_start = '\0';
+        
+        while (isspace(*next))
+            next++;
+
+        if (*next == 0)
+            continue;
+
+        char *end = next + strlen(next) - 1;
+        while (end > next && isspace(*end)) {
+            *end = '\0';
+            end--;
+        }
 
         // TODO: Trim whitespace left and right
 
-        if (tmp[0] == '\0') {
-            tmp = NULL;
+        if (next[0] == '\0') {
+            next = NULL;
             continue;
         }
     }
-    printf("next=%s\n", next);
-    parser->current_command = next;
-    // Advance index
-    parser->current_index++;
+    printf("next=%s\n", raw);
+    if (next != NULL) {
+        if (parser->raw != NULL)
+            free(parser->raw);
+        
+        parser->raw = raw;
+        parser->current_command = next;
+        parser->current_index++;
+    } else {
+        free(raw);
+    }
 }
 
 int main(int argc, char *argv[]) {
