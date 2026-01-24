@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <stdlib.h>
 /*
 Project 7 of Nand2Tetris.
 * Goal: 
@@ -59,20 +60,34 @@ Main - Drives the Parser and CodeWriter
 
 struct Parser {
     FILE *input_file;
-    char *raw;
+    char *free_current;
     char *current_command;
     int current_index; // needs to start at -1
-    bool has_more_lines;
+    bool is_eof;
 };
 
-void advance(struct Parser *parser) {
+void get_command_type() {
+
+}
+
+void get_arg1() {
+
+}
+
+void get_arg2() {
+
+}
+
+// TODO: if next != null store current command_type. also: instead of current_command store arr[3] with the 3 possible commands in there
+bool advance(struct Parser *parser) {
     int BUFFER_SIZE = 4096;
     char *raw = malloc(BUFFER_SIZE);
     char *next = NULL;
     while (next == NULL) {
         next = raw;
         if (fgets(raw, BUFFER_SIZE, parser->input_file) == NULL) {
-            parser->has_more_lines = false;
+            parser->is_eof = true;
+            next = NULL;
             break;
         }
         char *comment_start = strstr(next, "//");
@@ -82,8 +97,10 @@ void advance(struct Parser *parser) {
         while (isspace(*next))
             next++;
 
-        if (*next == 0)
+        if (*next == 0) {
+            next = NULL;
             continue;
+        }
 
         char *end = next + strlen(next) - 1;
         while (end > next && isspace(*end)) {
@@ -91,24 +108,24 @@ void advance(struct Parser *parser) {
             end--;
         }
 
-        // TODO: Trim whitespace left and right
-
-        if (next[0] == '\0') {
+        if (strlen(next) == 0) {
             next = NULL;
             continue;
         }
     }
-    printf("next=%s\n", raw);
     if (next != NULL) {
-        if (parser->raw != NULL)
-            free(parser->raw);
+        if (parser->free_current != NULL)
+            free(parser->free_current);
         
-        parser->raw = raw;
+        parser->free_current = raw;
         parser->current_command = next;
         parser->current_index++;
+        return true;
     } else {
         free(raw);
+        return false;
     }
+
 }
 
 int main(int argc, char *argv[]) {
@@ -138,9 +155,12 @@ int main(int argc, char *argv[]) {
     strncpy(file_root, filename_identifier, filename_identifier_len - cutoff);
     file_root[file_root_n - 1] = '\0';
     // End extract root file name for later use as static variable label
-    printf("input pointer = %s\n", iptr);
-    printf("file_identifier=%s\n", filename_identifier);
-    printf("file_stem=%s\n", file_root);
+
+    FILE *vm_ptr = fopen(iptr, "r");
+    struct Parser parser = {vm_ptr, NULL, NULL, -1, false};
+    while (advance(&parser)) {
+        printf("current=%s, raw=%s, is_eof=%d, idx=%d\n", parser.current_command, parser.free_current, parser.is_eof, parser.current_index);
+    }
     
     return 0;
 }
