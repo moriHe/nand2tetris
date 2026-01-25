@@ -60,22 +60,23 @@ Main - Drives the Parser and CodeWriter
 
 struct Parser {
     FILE *input_file;
-    char *free_current;
-    char *current_command;
+    char current_commands[3][50];
     int current_index; // needs to start at -1
-    bool is_eof;
 };
 
 void get_command_type() {
 
 }
 
-void get_arg1() {
-
+char *get_arg1(struct Parser *parser, char *command_type) {
+    // if type is C_ARITHMETIC -> return commands[0] (add, sub, neg, eq, gt, lt, and, or, not)
+    // if type is C_PUSH/C_POP, C_FUNCTION, C_CALL, C_LABEL, C_GOTO, C_If-GOTO -> return commands[1]
+    return parser->current_commands[1];
 }
 
-void get_arg2() {
-
+char *get_arg2(struct Parser *parser, char *command_type) {
+    // only return if C_PUSH, C_POP, C_FUNCTION, C_CALL (in this project only push/pop)
+    return parser->current_commands[2];
 }
 
 // TODO: if next != null store current command_type. also: instead of current_command store arr[3] with the 3 possible commands in there
@@ -86,7 +87,6 @@ bool advance(struct Parser *parser) {
     while (next == NULL) {
         next = raw;
         if (fgets(raw, BUFFER_SIZE, parser->input_file) == NULL) {
-            parser->is_eof = true;
             next = NULL;
             break;
         }
@@ -113,19 +113,26 @@ bool advance(struct Parser *parser) {
             continue;
         }
     }
+    
+    bool has_more_lines = false;
     if (next != NULL) {
-        if (parser->free_current != NULL)
-            free(parser->free_current);
-        
-        parser->free_current = raw;
-        parser->current_command = next;
+        size_t current_bucket = 0;
+        size_t current_bucket_idx = 0;
+        memset(parser->current_commands, 0, sizeof(parser->current_commands));
+        for (size_t i = 0; i < strlen(next); i++) {
+            if (isspace(next[i])) {
+                current_bucket++;
+                current_bucket_idx = 0;
+                continue;
+            }
+            parser->current_commands[current_bucket][current_bucket_idx] = next[i];
+            current_bucket_idx++;
+        }
         parser->current_index++;
         return true;
-    } else {
-        free(raw);
-        return false;
-    }
-
+    } 
+    free(raw);
+    return has_more_lines;
 }
 
 int main(int argc, char *argv[]) {
@@ -157,9 +164,10 @@ int main(int argc, char *argv[]) {
     // End extract root file name for later use as static variable label
 
     FILE *vm_ptr = fopen(iptr, "r");
-    struct Parser parser = {vm_ptr, NULL, NULL, -1, false};
+    struct Parser parser = {vm_ptr, {0}, -1};
     while (advance(&parser)) {
-        printf("current=%s, raw=%s, is_eof=%d, idx=%d\n", parser.current_command, parser.free_current, parser.is_eof, parser.current_index);
+        printf("idx=%d\n", parser.current_index);
+        printf("arr0=%s, arr1=%s, arr2=%s\n", parser.current_commands[0], parser.current_commands[1], parser.current_commands[2]);
     }
     
     return 0;
