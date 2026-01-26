@@ -57,15 +57,27 @@ See PDF 95 onward
 VMTranslator
 Main - Drives the Parser and CodeWriter
 */
-
+char *arithmetic_cmds[] = {"add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"};
+size_t arithmetic_cmds_len = sizeof arithmetic_cmds / sizeof arithmetic_cmds[0];
 struct Parser {
     FILE *input_file;
     char current_commands[3][50];
+    char current_command_type[50];
     int current_index; // needs to start at -1
 };
 
-void get_command_type() {
+char *get_command_type(char *cmd) {
+    if (strcmp(cmd, "push") == 0)
+        return "C_PUSH";
+    if (strcmp(cmd, "pop") == 0)
+        return "C_POP";
+    for (size_t i = 0; i < arithmetic_cmds_len; i++) {
+        if (strcmp(arithmetic_cmds[i], cmd) == 0)
+            return "C_ARITHMETIC";
+    }
 
+    fprintf(stderr, "Error: Could not find command type for cmd=%s.\n", cmd);
+    return NULL;
 }
 
 char *get_arg1(struct Parser *parser, char *command_type) {
@@ -119,6 +131,7 @@ bool advance(struct Parser *parser) {
         size_t current_bucket = 0;
         size_t current_bucket_idx = 0;
         memset(parser->current_commands, 0, sizeof(parser->current_commands));
+        parser->current_command_type[0] = '\0';
         for (size_t i = 0; i < strlen(next); i++) {
             if (isspace(next[i])) {
                 current_bucket++;
@@ -129,6 +142,7 @@ bool advance(struct Parser *parser) {
             current_bucket_idx++;
         }
         parser->current_index++;
+        strcpy(parser->current_command_type, get_command_type(parser->current_commands[0]));
         return true;
     } 
     free(raw);
@@ -164,9 +178,9 @@ int main(int argc, char *argv[]) {
     // End extract root file name for later use as static variable label
 
     FILE *vm_ptr = fopen(iptr, "r");
-    struct Parser parser = {vm_ptr, {0}, -1};
+    struct Parser parser = {vm_ptr, {0}, {0}, -1};
     while (advance(&parser)) {
-        printf("idx=%d\n", parser.current_index);
+        printf("idx=%d, cmd_type=%s\n", parser.current_index, parser.current_command_type);
         printf("arr0=%s, arr1=%s, arr2=%s\n", parser.current_commands[0], parser.current_commands[1], parser.current_commands[2]);
     }
     

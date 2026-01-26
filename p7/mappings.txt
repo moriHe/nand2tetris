@@ -1,0 +1,86 @@
+# test sequence
+
+## SimpleAdd
+push constant 16
+@16 
+D=A
+@SP
+A=M
+M=D    //M[A] = 16
+@SP    // Stack goes up
+M=M+1
+
+add
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+D=D+M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+## StackTest 
+
+## BasicTest
+
+## PointerTest
+
+##StaticTest
+___________________________________________________
+# segments
+
+## Stack Pointer
+@SP
+
+## constant
+
+## local
+@LCL
+
+## argument
+@ARG
+
+## this
+@THIS
+
+## that
+@THAT
+
+## pointer
+push pointer 0 -> Read value RAM[3] and copy it onto the stack
+pop pointer 0 -> Take the value from the stack and write into RAM[3]
+
+## temp
+
+## static
+______________________________________________________________
+#operations
+
+## add
+
+## sub
+
+## neg
+
+## eq
+
+## gt
+
+## lt
+
+## and
+
+## or
+
+## not
+
+## push segment i (Take memory from sement i put it on stack)
+
+## pop segment i (Take stack element and put it in memory of segment i)
+______________________________________________________________

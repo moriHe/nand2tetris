@@ -1,0 +1,13 @@
+If you have your .asm file on your local machine and are using the Web IDE:
+
+Open the CPU Emulator in the Web IDE.
+
+Upload your ASM: Click the Folder/Upload icon for the ROM (Instruction Memory) and select your local .asm file.
+
+Note: The emulator "assembles" it into machine code for you automatically once it's loaded.
+
+Upload the Test Script: Click the Folder/Upload icon specifically for the Test Script area (usually on the right or via the main menu) and select the Xxx.tst file (e.g., SimpleAdd.tst).
+
+Upload the Compare File: The emulator will often ask for the Xxx.cmp file as well so it knows what a "pass" looks like.
+
+Run: Set the animation to "No Animation" and speed to "Fast," then click the Play button.
