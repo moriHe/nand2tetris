@@ -57,14 +57,48 @@ See PDF 95 onward
 VMTranslator
 Main - Drives the Parser and CodeWriter
 */
+
+struct Writer {
+    FILE *output_file;
+};
+
+
 char *arithmetic_cmds[] = {"add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"};
 size_t arithmetic_cmds_len = sizeof arithmetic_cmds / sizeof arithmetic_cmds[0];
+
 struct Parser {
     FILE *input_file;
     char current_commands[3][50];
     char current_command_type[50];
     int current_index; // needs to start at -1
 };
+
+// TODO: Implement enum for the current_command_type and use switch instead of if/else in write
+void write(struct Parser *parser, struct Writer *writer) {
+    if (strcmp(parser->current_command_type, "C_ARITHMETIC") == 0) {
+        write_arithmetic(writer);
+    } else if (strcmp(parser->current_command_type, "C_PUSH") == 0) {
+        write_push(writer, parser);
+    } else if (strcmp(parser->current_command_type, "C_POP") == 0) {
+        write_pop();
+    } else {
+        // TODO: Error Handling
+    }
+}
+
+
+void write_arithmetic(struct Writer *writer) {
+        fprintf(writer->output_file, "writer_add");
+}
+
+void write_push(struct Writer *writer, struct Parser *parser) {
+    if (strcmp(parser->current_command_type[1], "constant") == 0) {
+        fprintf(writer->output_file, "@%s\nD=A\n", parser->current_commands[2]);
+    }
+}
+
+void write_pop() {
+}
 
 char *get_command_type(char *cmd) {
     if (strcmp(cmd, "push") == 0)
@@ -177,12 +211,18 @@ int main(int argc, char *argv[]) {
     file_root[file_root_n - 1] = '\0';
     // End extract root file name for later use as static variable label
 
-    FILE *vm_ptr = fopen(iptr, "r");
+    FILE *vm_ptr = fopen(iptr, "r");    
     struct Parser parser = {vm_ptr, {0}, {0}, -1};
+
+    FILE *outptr = fopen("./placeholder.asm", "w");
+    struct Writer writer = {outptr};
+
     while (advance(&parser)) {
+        write(&parser, &writer);
         printf("idx=%d, cmd_type=%s\n", parser.current_index, parser.current_command_type);
         printf("arr0=%s, arr1=%s, arr2=%s\n", parser.current_commands[0], parser.current_commands[1], parser.current_commands[2]);
     }
-    
+
+    fclose(writer.output_file);
     return 0;
 }
