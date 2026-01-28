@@ -26,6 +26,15 @@ M=D
 M=M+1
 
 ## StackTest 
+eq x==y
+lt x < y
+gt x > y
+sub x - y
+neg -y
+and x And y
+or x Or y 
+not Not x
+
 
 ## BasicTest
 

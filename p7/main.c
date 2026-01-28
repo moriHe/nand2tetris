@@ -73,8 +73,25 @@ struct Parser {
     int current_index; // needs to start at -1
 };
 
+void write_arithmetic(struct Writer *writer) {
+        // below is the add statement
+        // Next TODO: Add eq, lt, gt, sub, neg, and, or, not
+        fprintf(writer->output_file, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=D+M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"); // add
+}
+
+
+void write_push(struct Writer *writer, struct Parser *parser) {
+    if (strcmp(parser->current_commands[1], "constant") == 0) {
+        fprintf(writer->output_file, "@%s\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", parser->current_commands[2]);
+    }
+}
+
+void write_pop() {
+}
+
 // TODO: Implement enum for the current_command_type and use switch instead of if/else in write
 void write(struct Parser *parser, struct Writer *writer) {
+    printf("command_type=%s\n", parser->current_command_type);
     if (strcmp(parser->current_command_type, "C_ARITHMETIC") == 0) {
         write_arithmetic(writer);
     } else if (strcmp(parser->current_command_type, "C_PUSH") == 0) {
@@ -84,20 +101,6 @@ void write(struct Parser *parser, struct Writer *writer) {
     } else {
         // TODO: Error Handling
     }
-}
-
-
-void write_arithmetic(struct Writer *writer) {
-        fprintf(writer->output_file, "writer_add");
-}
-
-void write_push(struct Writer *writer, struct Parser *parser) {
-    if (strcmp(parser->current_command_type[1], "constant") == 0) {
-        fprintf(writer->output_file, "@%s\nD=A\n", parser->current_commands[2]);
-    }
-}
-
-void write_pop() {
 }
 
 char *get_command_type(char *cmd) {
@@ -214,13 +217,13 @@ int main(int argc, char *argv[]) {
     FILE *vm_ptr = fopen(iptr, "r");    
     struct Parser parser = {vm_ptr, {0}, {0}, -1};
 
-    FILE *outptr = fopen("./placeholder.asm", "w");
+    char output_name[file_root_n + 4];
+    sprintf(output_name, "%s.asm", file_root);
+    FILE *outptr = fopen(output_name, "w");
     struct Writer writer = {outptr};
 
     while (advance(&parser)) {
         write(&parser, &writer);
-        printf("idx=%d, cmd_type=%s\n", parser.current_index, parser.current_command_type);
-        printf("arr0=%s, arr1=%s, arr2=%s\n", parser.current_commands[0], parser.current_commands[1], parser.current_commands[2]);
     }
 
     fclose(writer.output_file);
