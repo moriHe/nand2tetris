@@ -10,7 +10,7 @@ M=D    //M[A] = 16
 @SP    // Stack goes up
 M=M+1
 
-add
+*********************************************add
 @SP
 M=M-1
 A=M
@@ -26,7 +26,7 @@ M=D
 M=M+1
 
 ## StackTest 
-eq x==y
+*********************************************eq x==y
 @SP
 M=M-1           /// Dekr SP (get y)
 A=M
@@ -35,13 +35,13 @@ D=M             // Lade y ins D Register
 M=M-1           // Dekr SP (get x)
 A=M
 D=M-D           // Lade x - y ins D Register
-@EQ_1
+@EQ_1        // die 1 ist dynamisch anhand vm row index. Es gibt ja mehrere eq in einem vm file
 D;JEQ           // Wenn x - y = 0; Springe zu Ist Gleich
 @SP             // Kein M=M-1 oder M=M+1 nötig. SP zeigt auf die nächste zu befüllende Stelle. Muss erst am Schluss inkrementiert werden um auf nächste zu befüllende Stelle + 1 zu zeigen
 A=M
 M=0             // x und y waren nicht gleich. Setze Memory bei SP auf 0 / False
-@END_EQ_1       // Springe zum Ende
-D;JMP
+@END_EQ_1     // Springe zum Ende
+0;JMP
 (EQ_1)          // Werte waren gleich
 @SP             // Selbe wie im not equal Block dieser Funktion. Kein inkr/dekr nötig   
 A=M
@@ -50,14 +50,116 @@ M=-1            // Setze Memory bei SP auf -1 / True
 @SP             // Inkrementiere den Stack Pointer damit er eins vor dem letzten validen Wert (hier true/false) zeigt
 M=M+1
 
-lt x < y
-gt x > y
-sub x - y
-neg -y
-and x And y
-or x Or y 
-not Not x
+*********************************************lt x < y
+@SP
+M=M-1
+A=M
+D=M             // y in D
+@SP
+M=M-1
+A=M
+D=M-D          // x-y. Das kann man abstrahieren. Ist wie bei x=y und dann wahrscheinlich auch bei x>y
+@LT_1
+D;JLT
+@SP           // auch abstrahierbar? true/false setzen mit oder ohne @SP
+A=M
+M=0
+@END_LT_1
+0;JMP
+(LT_1)
+@SP
+A=M
+M=-1
+(END_LT_1)
+@SP
+M=M+1
 
+
+*********************************************gt x > y
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+D=M-D
+@GT_1
+D;JGT
+@SP
+A=M
+M=0
+@END_GT_1
+0;JMP
+(GT_1)
+@SP
+A=M
+M=-1
+(END_GT_1)
+@SP
+M=M+1
+
+*********************************************sub x - y
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+D=M-D
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+*********************************************neg -y
+@SP
+M=M-1
+A=M
+M=-M
+@SP
+M=M+1
+
+*********************************************and x And y
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+D=D&M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+*********************************************or x Or y
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+D=D|M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+
+*********************************************not Not x
+@SP
+M=M-1
+A=M
+M=!M
+@SP
+M=M+1
 
 ## BasicTest
 

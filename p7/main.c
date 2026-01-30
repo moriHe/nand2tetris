@@ -73,7 +73,8 @@ struct Parser {
     int current_index; // needs to start at -1
 };
 
-void write_arithmetic(struct Writer *writer) {
+void write_arithmetic(struct Writer *writer, struct Parser *parser) {
+    char *instr = parser->current_commands[1];
         // below is the add statement
         // Next TODO: Add eq, lt, gt, sub, neg, and, or, not
         fprintf(writer->output_file, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=D+M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"); // add
@@ -93,7 +94,7 @@ void write_pop() {
 void write(struct Parser *parser, struct Writer *writer) {
     printf("command_type=%s\n", parser->current_command_type);
     if (strcmp(parser->current_command_type, "C_ARITHMETIC") == 0) {
-        write_arithmetic(writer);
+        write_arithmetic(writer, parser);
     } else if (strcmp(parser->current_command_type, "C_PUSH") == 0) {
         write_push(writer, parser);
     } else if (strcmp(parser->current_command_type, "C_POP") == 0) {
