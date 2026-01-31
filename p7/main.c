@@ -73,11 +73,79 @@ struct Parser {
     int current_index; // needs to start at -1
 };
 
+void decr_sp_load_a(FILE *optr) {
+    fprintf(optr, "@SP\nM=M-1\nA=M\n");
+}
+
+void decr_sp_load_a_m_to_d(FILE *optr) {
+    decr_sp_load_a(optr);
+    fprintf(optr, "D=M\n");
+}
+
+void incr_sp(FILE *optr) {
+    fprintf(optr, "@SP\nM=M+1\n");
+}
+
+void load_d_in_m(FILE *optr) {
+    fprintf(optr, "@SP\nA=M\nM=D\n");
+}
+
+void load_d_in_m_and_incr_sp(FILE *optr) {
+    load_d_in_m(optr);
+    incr_sp(optr);
+}
+
+void set_m_bool(FILE *optr, int bool_asm_val) {
+    fprintf(optr, "@SP\nA=M\nM=%d\n", bool_asm_val);
+}
+
 void write_arithmetic(struct Writer *writer, struct Parser *parser) {
     char *instr = parser->current_commands[1];
+    int curr_idx = parser->current_index;
+    FILE *optr = writer->output_file;
+    if (strcmp(instr, "add") == 0) {
+        decr_sp_load_a_m_to_d(optr);
+        decr_sp_load_a(optr);
+        fprintf(optr, "D=D+M\n");
+        load_d_in_m_and_incr_sp(optr);
+    } 
+    else if (strcmp(instr, "sub") == 0) {
+        decr_sp_load_a_m_to_d(optr);
+        decr_sp_load_a(optr);
+        fprintf(optr, "D=M-D\n");
+        load_d_in_m_and_incr_sp(optr);
+    } 
+    else if (strcmp(instr, "neg") == 0) {
+        decr_sp_load_a(optr);
+        fprintf(optr, "M=M-1\n");
+        incr_sp(optr);
+    }
+    else if (strcmp(instr, "eq") == 0) {
+        decr_sp_load_a_m_to_d(optr);
+        decr_sp_load_a(optr);
+        fprintf(optr, "D=M-D\n@EQ_%d\nD;JEQ\n", curr_idx);
+        set_m_bool(optr, 0);
+        fprintf(optr, "@END_EQ_%d\n0;JMP\n(EQ_%d)\n", curr_idx, curr_idx);
+        set_m_bool(optr, -1);
+        fprintf(optr, "(END_EQ_%d)\n", curr_idx);
+        incr_sp(optr);
+    }
+    else if (strcmp(instr, "gt") == 0) {
+        decr_sp_load_a_m_to_d(optr);
+        decr_sp_load_a(optr);
+        // maybe can be abstracted with some args? the bit: D=M-D @GT_1 D;JGT
+        // D=M-D is same for all bools. GT and JGT could be handled with args
+    }
+    else if (strcmp(instr, "lt") == 0)
+        fprintf();
+    else if (strcmp(instr, "and") == 0)
+        fprintf();
+    else if (strcmp(instr, "or") == 0)
+        fprintf();
+    else if (strcmp(instr, "not") == 0)
+        fprintf();
         // below is the add statement
         // Next TODO: Add eq, lt, gt, sub, neg, and, or, not
-        fprintf(writer->output_file, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=D+M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"); // add
 }
 
 
