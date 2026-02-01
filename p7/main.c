@@ -73,6 +73,10 @@ struct Parser {
     int current_index; // needs to start at -1
 };
 
+void incr_sp(FILE *optr) {
+    fprintf(optr, "@SP\nM=M+1\n");
+}
+
 void load_curr_stack_addr(FILE *optr) {
     fprintf(optr, "@SP\nM=M-1\nA=M\n");
 }
@@ -81,17 +85,13 @@ void calc_latest_two(FILE *optr, char *calc) {
     load_curr_stack_addr(optr);
     fprintf(optr, "D=M\n");    
     load_curr_stack_addr(optr);
-    fptrinf(optr, "%s\n", calc);
+    fprintf(optr, "%s\n", calc);
 }
 
 void calc_latest_two_push_result_stack(FILE *optr, char *calc) {
     calc_latest_two(optr, calc);
     fprintf(optr, "@SP\nA=M\nM=D\n");
     incr_sp(optr);
-}
-
-void incr_sp(FILE *optr) {
-    fprintf(optr, "@SP\nM=M+1\n");
 }
 
 void set_m_bool(FILE *optr, int bool_asm_val) {
@@ -113,9 +113,10 @@ void calc_bool_op(FILE *optr, int curr_idx, char *op) {
 // * At the end of each operation, RAM[SP] needs to point at en empty value
 // * RAM[SP - 1] is the latest value
 void write_arithmetic(struct Writer *writer, struct Parser *parser) {
-    char *instr = parser->current_commands[1];
+    char *instr = parser->current_commands[0];
     int curr_idx = parser->current_index;
     FILE *optr = writer->output_file;
+    printf("c_op=%s\n", instr);
     if (strcmp(instr, "add") == 0) {
         calc_latest_two_push_result_stack(optr, "D=D+M");
     }
@@ -144,7 +145,7 @@ void write_arithmetic(struct Writer *writer, struct Parser *parser) {
     }
     else if (strcmp(instr, "not") == 0) {
         load_curr_stack_addr(optr);
-        fprintf(optr, "M=!M");
+        fprintf(optr, "M=!M\n");
         incr_sp(optr);
     }
 }
@@ -198,7 +199,6 @@ char *get_arg2(struct Parser *parser, char *command_type) {
     return parser->current_commands[2];
 }
 
-// TODO: if next != null store current command_type. also: instead of current_command store arr[3] with the 3 possible commands in there
 bool advance(struct Parser *parser) {
     int BUFFER_SIZE = 4096;
     char *raw = malloc(BUFFER_SIZE);
@@ -295,6 +295,8 @@ int main(int argc, char *argv[]) {
     while (advance(&parser)) {
         write(&parser, &writer);
     }
+
+    fprintf(writer.output_file, "(END)\n@END\n0;JMP");
 
     fclose(writer.output_file);
     return 0;
