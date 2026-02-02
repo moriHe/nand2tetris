@@ -62,8 +62,17 @@ struct Writer {
     FILE *output_file;
 };
 
+const char ADD[] = "add";
+const char SUB[] = "sub";
+const char NEG[] = "neg";
+const char EQ[] = "eq";
+const char GT[] = "gt";
+const char LT[] = "lt";
+const char AND[] = "and";
+const char OR[] = "or";
+const char NOT[] = "not";
 
-char *arithmetic_cmds[] = {"add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"};
+const char *arithmetic_cmds[] = {ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT};
 size_t arithmetic_cmds_len = sizeof arithmetic_cmds / sizeof arithmetic_cmds[0];
 
 struct Parser {
@@ -117,33 +126,33 @@ void write_arithmetic(struct Writer *writer, struct Parser *parser) {
     int curr_idx = parser->current_index;
     FILE *optr = writer->output_file;
     printf("c_op=%s\n", instr);
-    if (strcmp(instr, "add") == 0) {
+    if (strcmp(instr, ADD) == 0) {
         calc_latest_two_push_result_stack(optr, "D=D+M");
     }
-    else if (strcmp(instr, "sub") == 0) {
+    else if (strcmp(instr, SUB) == 0) {
         calc_latest_two_push_result_stack(optr, "D=M-D");
     } 
-    else if (strcmp(instr, "neg") == 0) {
+    else if (strcmp(instr, NEG) == 0) {
         load_curr_stack_addr(optr);
         fprintf(optr, "M=-M\n");
         incr_sp(optr);
     }
-    else if (strcmp(instr, "eq") == 0) {
+    else if (strcmp(instr, EQ) == 0) {
         calc_bool_op(optr, curr_idx, "EQ");
     }
-    else if (strcmp(instr, "gt") == 0) {
+    else if (strcmp(instr, GT) == 0) {
         calc_bool_op(optr, curr_idx, "GT");
     }
-    else if (strcmp(instr, "lt") == 0) {
+    else if (strcmp(instr, LT) == 0) {
         calc_bool_op(optr, curr_idx, "LT");
     }
-    else if (strcmp(instr, "and") == 0) {
+    else if (strcmp(instr, AND) == 0) {
         calc_latest_two_push_result_stack(optr, "D=D&M");
     }
-    else if (strcmp(instr, "or") == 0) {
+    else if (strcmp(instr, OR) == 0) {
         calc_latest_two_push_result_stack(optr, "D=D|M");
     }
-    else if (strcmp(instr, "not") == 0) {
+    else if (strcmp(instr, NOT) == 0) {
         load_curr_stack_addr(optr);
         fprintf(optr, "M=!M\n");
         incr_sp(optr);
