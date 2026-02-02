@@ -72,13 +72,21 @@ const char AND[] = "and";
 const char OR[] = "or";
 const char NOT[] = "not";
 
+enum CMD_TYPE_ENUM {
+    C_PUSH,
+    C_POP,
+    C_ARITHMETIC,
+    C_INVALID,
+    C_NONE
+};
+
 const char *arithmetic_cmds[] = {ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT};
 size_t arithmetic_cmds_len = sizeof arithmetic_cmds / sizeof arithmetic_cmds[0];
 
 struct Parser {
     FILE *input_file;
     char current_commands[3][50];
-    char current_command_type[50];
+    enum CMD_TYPE_ENUM current_command_type;
     int current_index; // needs to start at -1
 };
 
@@ -171,30 +179,34 @@ void write_pop() {
 
 // TODO: Implement enum for the current_command_type and use switch instead of if/else in write
 void write(struct Parser *parser, struct Writer *writer) {
-    printf("command_type=%s\n", parser->current_command_type);
-    if (strcmp(parser->current_command_type, "C_ARITHMETIC") == 0) {
+    switch (parser->current_command_type)
+    {
+    case C_ARITHMETIC:
         write_arithmetic(writer, parser);
-    } else if (strcmp(parser->current_command_type, "C_PUSH") == 0) {
-        write_push(writer, parser);
-    } else if (strcmp(parser->current_command_type, "C_POP") == 0) {
+        break;
+    case C_PUSH:
+         write_push(writer, parser);
+         break;
+    case C_POP:
         write_pop();
-    } else {
-        // TODO: Error Handling
+        break;
+    default:
+        break;
     }
 }
 
-char *get_command_type(char *cmd) {
+enum CMD_TYPE_ENUM get_command_type(char *cmd) {
     if (strcmp(cmd, "push") == 0)
-        return "C_PUSH";
+        return C_PUSH;
     if (strcmp(cmd, "pop") == 0)
-        return "C_POP";
+        return C_POP;
     for (size_t i = 0; i < arithmetic_cmds_len; i++) {
         if (strcmp(arithmetic_cmds[i], cmd) == 0)
-            return "C_ARITHMETIC";
+            return C_ARITHMETIC;
     }
 
     fprintf(stderr, "Error: Could not find command type for cmd=%s.\n", cmd);
-    return NULL;
+    return C_INVALID;
 }
 
 char *get_arg1(struct Parser *parser, char *command_type) {
@@ -210,7 +222,7 @@ char *get_arg2(struct Parser *parser, char *command_type) {
 
 bool advance(struct Parser *parser) {
     int BUFFER_SIZE = 4096;
-    char *raw = malloc(BUFFER_SIZE);
+    char raw[BUFFER_SIZE];
     char *next = NULL;
     while (next == NULL) {
         next = raw;
@@ -247,7 +259,6 @@ bool advance(struct Parser *parser) {
         size_t current_bucket = 0;
         size_t current_bucket_idx = 0;
         memset(parser->current_commands, 0, sizeof(parser->current_commands));
-        parser->current_command_type[0] = '\0';
         for (size_t i = 0; i < strlen(next); i++) {
             if (isspace(next[i])) {
                 current_bucket++;
@@ -258,10 +269,9 @@ bool advance(struct Parser *parser) {
             current_bucket_idx++;
         }
         parser->current_index++;
-        strcpy(parser->current_command_type, get_command_type(parser->current_commands[0]));
+        parser->current_command_type = get_command_type(parser->current_commands[0]);
         return true;
     } 
-    free(raw);
     return has_more_lines;
 }
 
@@ -294,7 +304,7 @@ int main(int argc, char *argv[]) {
     // End extract root file name for later use as static variable label
 
     FILE *vm_ptr = fopen(iptr, "r");    
-    struct Parser parser = {vm_ptr, {0}, {0}, -1};
+    struct Parser parser = {vm_ptr, {0}, C_NONE, -1};
 
     char output_name[file_root_n + 4];
     sprintf(output_name, "%s.asm", file_root);
