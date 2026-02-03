@@ -166,6 +166,24 @@ M=M+1
 ## PointerTest
 
 ##StaticTest
+need @LCL for local
+need @ARG for argument
+need tmp which is @5 + offset
+@THIS and @THAT. No pointer alloc yet. So pretty much same implementation as @LCL and @ARG
+*******
+@__PLACEHOLDER__ eg LCL, ARG, THIS, THAT, TEMP
+D=M
+@current_commands[2]
+D=D+A
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+
 ___________________________________________________
 # segments
 
