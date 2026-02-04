@@ -133,7 +133,7 @@ void write_arithmetic(struct Writer *writer, struct Parser *parser) {
     char *instr = parser->current_commands[0];
     int curr_idx = parser->current_index;
     FILE *optr = writer->output_file;
-    printf("c_op=%s\n", instr);
+
     if (strcmp(instr, ADD) == 0) {
         calc_latest_two_push_result_stack(optr, "D=D+M");
     }
@@ -167,10 +167,31 @@ void write_arithmetic(struct Writer *writer, struct Parser *parser) {
     }
 }
 
+bool is_cmd(const char *curr_cmd, const char *comparator) {
+    if (strcmp(curr_cmd, comparator) == 0)
+        return true;
+    return false;
+}
 
 void write_push(struct Writer *writer, struct Parser *parser) {
-    if (strcmp(parser->current_commands[1], "constant") == 0) {
+    const char *curr_cmd = parser->current_commands[1];
+    if (is_cmd(curr_cmd, "constant")) {
         fprintf(writer->output_file, "@%s\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", parser->current_commands[2]);
+    }
+    else if (is_cmd(curr_cmd, "local")) {
+        // @LCL
+    }
+    else if (is_cmd(curr_cmd, "argument")) {
+        // @ARG
+    }
+    else if (is_cmd(curr_cmd, "this")) {
+        // @THAT
+    }
+    else if (is_cmd(curr_cmd, "that")) {
+        // @THIS
+    }
+    else if (is_cmd(curr_cmd, "temp")) {
+        // @5 ..
     }
 }
 

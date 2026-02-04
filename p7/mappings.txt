@@ -171,6 +171,7 @@ need @ARG for argument
 need tmp which is @5 + offset
 @THIS and @THAT. No pointer alloc yet. So pretty much same implementation as @LCL and @ARG
 *******
+push LCL/ARG/THIS/THAT/TEMP X
 @__PLACEHOLDER__ eg LCL, ARG, THIS, THAT, TEMP
 D=M
 @current_commands[2]
@@ -182,6 +183,32 @@ A=M
 M=D
 @SP
 M=M+1
+
+push constant
+@current_commands[2]
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+**************** TEMP ist ne konstante beginnend bei @5
+pop LCL/ARG/THIS/THAT/TEMP X
+@__PLACEHOLDER__
+D=M
+@current_commands[2]
+D=D+A
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+
+
 
 
 ___________________________________________________
