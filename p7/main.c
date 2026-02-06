@@ -173,29 +173,72 @@ bool is_cmd(const char *curr_cmd, const char *comparator) {
     return false;
 }
 
+void write_offset_a(FILE *optr, const char *start_val, const char *offset) {
+    fprintf(optr, "@%s\nD=M\n@%s\nD=D+A\n", start_val, offset);
+}
+
+void pop(FILE *optr, const char *start_val, const char *offset) {
+    write_offset_a(optr, start_val, offset);
+    fprintf(optr, "@R13\nM=D\n");
+    load_curr_stack_addr(optr);
+    fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
+}
+
+void push(FILE *optr, const char *start_val, const char *offset) {
+    write_offset_a(optr, start_val, offset);
+    fprintf(optr, "A=D\nD=M\n@SP\nA=M\nM=D\n");
+    incr_sp(optr);
+}
+
 void write_push(struct Writer *writer, struct Parser *parser) {
     const char *curr_cmd = parser->current_commands[1];
+    const char *offset = parser->current_commands[2];
+    FILE *optr = writer->output_file;
+
     if (is_cmd(curr_cmd, "constant")) {
-        fprintf(writer->output_file, "@%s\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", parser->current_commands[2]);
+        fprintf(optr, "@%s\nD=A\n@SP\nA=M\nM=D\n", offset);
+        incr_sp(optr);
     }
     else if (is_cmd(curr_cmd, "local")) {
-        // @LCL
+        push(optr, "LCL", offset);
     }
     else if (is_cmd(curr_cmd, "argument")) {
-        // @ARG
+        push(optr, "ARG", offset);
     }
     else if (is_cmd(curr_cmd, "this")) {
-        // @THAT
+       push(optr, "THIS", offset);
     }
     else if (is_cmd(curr_cmd, "that")) {
-        // @THIS
+       push(optr, "THAT", offset);
     }
     else if (is_cmd(curr_cmd, "temp")) {
-        // @5 ..
+        fprintf(optr, "@5\nD=A\n@%s\nD=D+A\nA=D\nD=M\n@SP\nA=M\nM=D\n", offset);
+        incr_sp(optr);
     }
 }
 
-void write_pop() {
+void write_pop(struct Writer *writer, struct Parser *parser) {
+    const char *curr_cmd = parser->current_commands[1];
+    const char *offset = parser->current_commands[2];
+    FILE *optr = writer->output_file;
+
+    if (is_cmd(curr_cmd, "local")) {
+        pop(optr, "LCL", offset);
+    }
+    else if (is_cmd(curr_cmd, "argument")) {
+        pop(optr, "ARG", offset);
+    }
+    else if (is_cmd(curr_cmd, "this")) {
+        pop(optr, "THIS", offset);
+    }
+    else if (is_cmd(curr_cmd, "that")) {
+        pop(optr, "THAT", offset);
+    }
+    else if (is_cmd(curr_cmd, "temp")) {
+        fprintf(optr, "@5\nD=A\n@%s\nD=D+A\n@R13\nM=D\n", offset);
+        load_curr_stack_addr(optr);
+        fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
+    }
 }
 
 // TODO: Implement enum for the current_command_type and use switch instead of if/else in write
@@ -209,7 +252,7 @@ void write(struct Parser *parser, struct Writer *writer) {
          write_push(writer, parser);
          break;
     case C_POP:
-        write_pop();
+        write_pop(writer, parser);
         break;
     default:
         break;
