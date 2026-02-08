@@ -190,7 +190,7 @@ void push(FILE *optr, const char *start_val, const char *offset) {
     incr_sp(optr);
 }
 
-void write_push(struct Writer *writer, struct Parser *parser) {
+void write_push(struct Writer *writer, struct Parser *parser, const char *output_name) {
     const char *curr_cmd = parser->current_commands[1];
     const char *offset = parser->current_commands[2];
     FILE *optr = writer->output_file;
@@ -222,10 +222,18 @@ void write_push(struct Writer *writer, struct Parser *parser) {
             fprintf(optr, "@THAT\nD=M\n@SP\nA=M\nM=D\n");
         }
         incr_sp(optr);
+    } else if (is_cmd(curr_cmd, "static")) {
+        char addr[256];
+        char idx_str[20];
+        snprintf(idx_str, sizeof(idx_str), "%d", parser->current_index);
+        strcpy(addr, output_name);
+        strcat(addr, ".");
+        strcat(addr, idx_str);
+        push(optr, addr, offset);
     }
 }
 
-void write_pop(struct Writer *writer, struct Parser *parser) {
+void write_pop(struct Writer *writer, struct Parser *parser, const char *output_name) {
     const char *curr_cmd = parser->current_commands[1];
     const char *offset = parser->current_commands[2];
     FILE *optr = writer->output_file;
@@ -253,21 +261,29 @@ void write_pop(struct Writer *writer, struct Parser *parser) {
         } else {
             fprintf(optr, "@SP\nAM=M-1\nD=M\n@THAT\nM=D\n");
         }
+    } else if (is_cmd(curr_cmd, "static")) {
+        char addr[256];
+        char idx_str[20];
+        snprintf(idx_str, sizeof(idx_str), "%d", parser->current_index);
+        strcpy(addr, output_name);
+        strcat(addr, ".");
+        strcat(addr, idx_str);
+        pop(optr, addr, offset);
     }
 }
 
 // TODO: Implement enum for the current_command_type and use switch instead of if/else in write
-void write(struct Parser *parser, struct Writer *writer) {
+void write(struct Parser *parser, struct Writer *writer, const char *output_name) {
     switch (parser->current_command_type)
     {
     case C_ARITHMETIC:
         write_arithmetic(writer, parser);
         break;
     case C_PUSH:
-         write_push(writer, parser);
+         write_push(writer, parser, output_name);
          break;
     case C_POP:
-        write_pop(writer, parser);
+        write_pop(writer, parser, output_name);
         break;
     default:
         break;
@@ -391,7 +407,7 @@ int main(int argc, char *argv[]) {
     struct Writer writer = {outptr};
 
     while (advance(&parser)) {
-        write(&parser, &writer);
+        write(&parser, &writer, output_name);
     }
 
     fprintf(writer.output_file, "(END)\n@END\n0;JMP");
