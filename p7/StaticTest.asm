@@ -19,7 +19,7 @@ A=M
 M=D
 @SP
 M=M+1
-@StaticTest.asm.3
+@StaticTest.3
 D=M
 @8
 D=D+A
@@ -32,7 +32,7 @@ D=M
 @R13
 A=M
 M=D
-@StaticTest.asm.4
+@StaticTest.4
 D=M
 @3
 D=D+A
@@ -45,7 +45,7 @@ D=M
 @R13
 A=M
 M=D
-@StaticTest.asm.5
+@StaticTest.5
 D=M
 @1
 D=D+A
@@ -58,7 +58,7 @@ D=M
 @R13
 A=M
 M=D
-@StaticTest.asm.6
+@StaticTest.6
 D=M
 @3
 D=D+A
@@ -69,7 +69,7 @@ A=M
 M=D
 @SP
 M=M+1
-@StaticTest.asm.7
+@StaticTest.7
 D=M
 @1
 D=D+A
@@ -93,7 +93,7 @@ A=M
 M=D
 @SP
 M=M+1
-@StaticTest.asm.9
+@StaticTest.9
 D=M
 @8
 D=D+A

@@ -403,7 +403,7 @@ int main(int argc, char *argv[]) {
     FILE *optr = fopen(output_name, "w");
 
     while (advance(&parser)) {
-        write(&parser, optr, output_name);
+        write(&parser, optr, file_root);
     }
 
     fprintf(optr, "(END)\n@END\n0;JMP");
