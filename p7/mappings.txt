@@ -163,9 +163,7 @@ M=M+1
 
 ## BasicTest
 
-## PointerTest
 
-##StaticTest
 need @LCL for local
 need @ARG for argument
 need tmp which is @5 + offset
@@ -208,7 +206,26 @@ D=M
 A=M
 M=D
 
+## PointerTest
+RAM[3] pop pointer 0 - take stack value store in pointer offset 0. this is the new address of THIS
+@SP
+AM=M-1
+D=M
+@THIS/THAT
+M=D
 
+
+RAM[4] push pointer 0/1 - take stack value in pointer offset 1 (THAT address) and put it on the stack
+@THIS/THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+
+##StaticTest
 
 
 ___________________________________________________

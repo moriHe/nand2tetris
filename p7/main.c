@@ -214,6 +214,14 @@ void write_push(struct Writer *writer, struct Parser *parser) {
     else if (is_cmd(curr_cmd, "temp")) {
         fprintf(optr, "@5\nD=A\n@%s\nD=D+A\nA=D\nD=M\n@SP\nA=M\nM=D\n", offset);
         incr_sp(optr);
+    } 
+    else if (is_cmd(curr_cmd, "pointer")) {
+        if (strcmp(offset, "0") == 0) {
+            fprintf(optr, "@THIS\nD=M\n@SP\nA=M\nM=D\n");
+        } else {
+            fprintf(optr, "@THAT\nD=M\n@SP\nA=M\nM=D\n");
+        }
+        incr_sp(optr);
     }
 }
 
@@ -238,6 +246,13 @@ void write_pop(struct Writer *writer, struct Parser *parser) {
         fprintf(optr, "@5\nD=A\n@%s\nD=D+A\n@R13\nM=D\n", offset);
         load_curr_stack_addr(optr);
         fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
+    }
+    else if (is_cmd(curr_cmd, "pointer")) {
+        if (strcmp(offset, "0") == 0) {
+            fprintf(optr, "@SP\nAM=M-1\nD=M\n@THIS\nM=D\n");
+        } else {
+            fprintf(optr, "@SP\nAM=M-1\nD=M\n@THAT\nM=D\n");
+        }
     }
 }
 
