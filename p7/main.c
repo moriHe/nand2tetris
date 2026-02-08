@@ -129,10 +129,9 @@ void calc_bool_op(FILE *optr, int curr_idx, char *op) {
 // * Nand2Tetris is an Empty Stack implementation.
 // * At the end of each operation, RAM[SP] needs to point at en empty value
 // * RAM[SP - 1] is the latest value
-void write_arithmetic(struct Writer *writer, struct Parser *parser) {
+void write_arithmetic(FILE *optr, struct Parser *parser) {
     char *instr = parser->current_commands[0];
     int curr_idx = parser->current_index;
-    FILE *optr = writer->output_file;
 
     if (strcmp(instr, ADD) == 0) {
         calc_latest_two_push_result_stack(optr, "D=D+M");
@@ -190,10 +189,9 @@ void push(FILE *optr, const char *start_val, const char *offset) {
     incr_sp(optr);
 }
 
-void write_push(struct Writer *writer, struct Parser *parser, const char *output_name) {
+void write_push(FILE *optr, struct Parser *parser, const char *output_name) {
     const char *curr_cmd = parser->current_commands[1];
     const char *offset = parser->current_commands[2];
-    FILE *optr = writer->output_file;
 
     if (is_cmd(curr_cmd, "constant")) {
         fprintf(optr, "@%s\nD=A\n@SP\nA=M\nM=D\n", offset);
@@ -233,10 +231,9 @@ void write_push(struct Writer *writer, struct Parser *parser, const char *output
     }
 }
 
-void write_pop(struct Writer *writer, struct Parser *parser, const char *output_name) {
+void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
     const char *curr_cmd = parser->current_commands[1];
     const char *offset = parser->current_commands[2];
-    FILE *optr = writer->output_file;
 
     if (is_cmd(curr_cmd, "local")) {
         pop(optr, "LCL", offset);
@@ -273,17 +270,17 @@ void write_pop(struct Writer *writer, struct Parser *parser, const char *output_
 }
 
 // TODO: Implement enum for the current_command_type and use switch instead of if/else in write
-void write(struct Parser *parser, struct Writer *writer, const char *output_name) {
+void write(struct Parser *parser, FILE *optr, const char *output_name) {
     switch (parser->current_command_type)
     {
     case C_ARITHMETIC:
-        write_arithmetic(writer, parser);
+        write_arithmetic(optr, parser);
         break;
     case C_PUSH:
-         write_push(writer, parser, output_name);
+         write_push(optr, parser, output_name);
          break;
     case C_POP:
-        write_pop(writer, parser, output_name);
+        write_pop(optr, parser, output_name);
         break;
     default:
         break;
@@ -403,15 +400,14 @@ int main(int argc, char *argv[]) {
 
     char output_name[file_root_n + 4];
     sprintf(output_name, "%s.asm", file_root);
-    FILE *outptr = fopen(output_name, "w");
-    struct Writer writer = {outptr};
+    FILE *optr = fopen(output_name, "w");
 
     while (advance(&parser)) {
-        write(&parser, &writer, output_name);
+        write(&parser, optr, output_name);
     }
 
-    fprintf(writer.output_file, "(END)\n@END\n0;JMP");
+    fprintf(optr, "(END)\n@END\n0;JMP");
 
-    fclose(writer.output_file);
+    fclose(optr);
     return 0;
 }
