@@ -15,6 +15,10 @@ void write(struct Parser *parser, FILE *optr, const char *output_name) {
     case C_POP:
         write_pop(optr, parser, output_name);
         break;
+    case C_IF:
+        // TODO: Implement
+    case C_LABEL:
+        // TODO: Implement
     default:
         break;
     }

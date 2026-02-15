@@ -10,6 +10,8 @@ enum CMD_TYPE_ENUM {
     C_PUSH,
     C_POP,
     C_ARITHMETIC,
+    C_LABEL,
+    C_IF,
     C_INVALID,
     C_NONE
 };
