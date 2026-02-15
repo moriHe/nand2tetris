@@ -21,8 +21,8 @@ void pop(FILE *optr, const char *start_val, const char *offset) {
 }
 
 void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
-    const char *curr_cmd = parser->current_commands[1];
-    const char *offset = parser->current_commands[2];
+    const char *curr_cmd = get_arg1(parser);
+    const char *offset = get_arg2(parser);
 
     if (is_cmd(curr_cmd, "local")) {
         pop(optr, "LCL", offset);
@@ -65,8 +65,8 @@ void push(FILE *optr, const char *start_val, const char *offset) {
 }
 
 void write_push(FILE *optr, struct Parser *parser, const char *output_name) {
-    const char *curr_cmd = parser->current_commands[1];
-    const char *offset = parser->current_commands[2];
+    const char *curr_cmd = get_arg1(parser);
+    const char *offset = get_arg2(parser);
 
     if (is_cmd(curr_cmd, "constant")) {
         fprintf(optr, "@%s\nD=A\n@SP\nA=M\nM=D\n", offset);

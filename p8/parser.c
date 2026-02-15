@@ -15,15 +15,36 @@ enum CMD_TYPE_ENUM get_command_type(char *cmd) {
     return C_INVALID;
 }
 
-char *get_arg1(struct Parser *parser, char *command_type) {
-    // if type is C_ARITHMETIC -> return commands[0] (add, sub, neg, eq, gt, lt, and, or, not)
-    // if type is C_PUSH/C_POP, C_FUNCTION, C_CALL, C_LABEL, C_GOTO, C_If-GOTO -> return commands[1]
+enum CMD_TYPE_ENUM get_current_cmd_type(struct Parser *parser) {
+    return parser->current_command_type;
+}
+
+char *get_arg1(struct Parser *parser) {
     return parser->current_commands[1];
 }
 
-char *get_arg2(struct Parser *parser, char *command_type) {
-    // only return if C_PUSH, C_POP, C_FUNCTION, C_CALL (in this project only push/pop)
+char *get_arg2(struct Parser *parser) {
     return parser->current_commands[2];
+}
+
+
+void set_parser(struct Parser *parser, char *next) {
+    size_t current_bucket = 0;
+    size_t current_bucket_idx = 0;
+    memset(parser->current_commands, 0, sizeof(parser->current_commands));
+    for (size_t i = 0; i < strlen(next); i++)
+    {
+        if (isspace(next[i]))
+        {
+            current_bucket++;
+            current_bucket_idx = 0;
+            continue;
+        }
+        parser->current_commands[current_bucket][current_bucket_idx] = next[i];
+        current_bucket_idx++;
+    }
+    parser->current_index++;
+    parser->current_command_type = get_command_type(parser->current_commands[0]);
 }
 
 bool advance(struct Parser *parser) {
@@ -62,21 +83,8 @@ bool advance(struct Parser *parser) {
     
     bool has_more_lines = false;
     if (next != NULL) {
-        size_t current_bucket = 0;
-        size_t current_bucket_idx = 0;
-        memset(parser->current_commands, 0, sizeof(parser->current_commands));
-        for (size_t i = 0; i < strlen(next); i++) {
-            if (isspace(next[i])) {
-                current_bucket++;
-                current_bucket_idx = 0;
-                continue;
-            }
-            parser->current_commands[current_bucket][current_bucket_idx] = next[i];
-            current_bucket_idx++;
-        }
-        parser->current_index++;
-        parser->current_command_type = get_command_type(parser->current_commands[0]);
-        return true;
+        set_parser(parser, next);
+        has_more_lines = true;
     } 
     return has_more_lines;
 }

@@ -22,8 +22,11 @@ struct Parser {
 };
 
 enum CMD_TYPE_ENUM get_command_type(char *cmd);
-char *get_arg1(struct Parser *parser, char *command_type);
-char *get_arg2(struct Parser *parser, char *command_type);
+enum CMD_TYPE_ENUM get_current_cmd_type(struct Parser *parser);
+char *get_arg1(struct Parser *parser);
+char *get_arg2(struct Parser *parser);
 bool advance(struct Parser *parser);
+
+void set_parser(struct Parser *parser, char *next);
 
 #endif

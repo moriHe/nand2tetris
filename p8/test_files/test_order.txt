@@ -1,4 +1,18 @@
 1. BasicLoop
+general: should use implemented getarg1 amd getarg2 methods. Forgot about them before
+new: 
+* label LOOP:
+- impl get_current_command_type C_LABEL
+- the label keyword is current_commands[0]
+- impl (LOOP)
+- care for uppercase?
+* if-goto
+- impl get_current_command_type C_IF
+- the if-goto keyword is current_commands[0]
+- impl @LOOP
+
+I dont care yet for naming it with the function name before
+
 2. FibonacciSeries
 3. SimpleFunction
 4. NestedCall

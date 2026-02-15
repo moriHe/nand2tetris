@@ -4,7 +4,7 @@
 #include "writer_push_pop.h"
 
 void write(struct Parser *parser, FILE *optr, const char *output_name) {
-    switch (parser->current_command_type)
+    switch (get_current_cmd_type(parser))
     {
     case C_ARITHMETIC:
         write_arithmetic(optr, parser);
