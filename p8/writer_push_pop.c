@@ -1,4 +1,6 @@
-#include "push_pop.h"
+#include "writer_push_pop.h"
+#include "parser.h"
+#include "stack_ptr.h"
 
 void write_offset_a(FILE *optr, const char *start_val, const char *offset) {
     fprintf(optr, "@%s\nD=M\n@%s\nD=D+A\n", start_val, offset);

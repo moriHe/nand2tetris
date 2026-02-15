@@ -1,4 +1,6 @@
-#include "arithmetic_ops.h"
+#include "writer_arth.h"
+#include "parser.h"
+#include "stack_ptr.h"
 
 const char ADD[] = "add";
 const char SUB[] = "sub";

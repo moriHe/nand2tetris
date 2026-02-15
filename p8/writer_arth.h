@@ -1,11 +1,10 @@
-#ifndef ARITHMETIC_OPS_H
-#define ARITHMETIC_OPS_H
+#ifndef WRITER_ARTH_H
+#define WRITER_ARTH_H
 
 #include <stdio.h>
 #include <string.h>
 
-#include "parser.h"
-#include "stack_ptr.h"
+struct Parser;
 
 extern const char ADD[];
 extern const char SUB[];

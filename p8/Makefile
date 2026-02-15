@@ -1,3 +1,3 @@
-SRCS = main.c push_pop.c arithmetic_ops.c stack_ptr.c
+SRCS = main.c parser.c writer.c writer_push_pop.c writer_arth.c stack_ptr.c utils.c
 all:
 	gcc $(SRCS) -o main
