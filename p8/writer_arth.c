@@ -15,9 +15,9 @@ const char *arithmetic_cmds[] = {ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT};
 size_t arithmetic_cmds_len = sizeof arithmetic_cmds / sizeof arithmetic_cmds[0];
 
 void calc_latest_two(FILE *optr, char *calc) {
-    load_curr_stack_addr(optr);
+    decr_sp(optr);
     fprintf(optr, "D=M\n");    
-    load_curr_stack_addr(optr);
+    decr_sp(optr);
     fprintf(optr, "%s\n", calc);
 }
 
@@ -56,7 +56,7 @@ void write_arithmetic(FILE *optr, struct Parser *parser) {
         calc_latest_two_push_result_stack(optr, "D=M-D");
     } 
     else if (strcmp(instr, NEG) == 0) {
-        load_curr_stack_addr(optr);
+        decr_sp(optr);
         fprintf(optr, "M=-M\n");
         incr_sp(optr);
     }
@@ -76,7 +76,7 @@ void write_arithmetic(FILE *optr, struct Parser *parser) {
         calc_latest_two_push_result_stack(optr, "D=D|M");
     }
     else if (strcmp(instr, NOT) == 0) {
-        load_curr_stack_addr(optr);
+        decr_sp(optr);
         fprintf(optr, "M=!M\n");
         incr_sp(optr);
     }

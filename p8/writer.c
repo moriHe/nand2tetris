@@ -17,7 +17,7 @@ void write(struct Parser *parser, FILE *optr, const char *output_name) {
         write_pop(optr, parser, output_name);
         break;
     case C_IF:
-        load_curr_stack_addr(optr);
+        decr_sp(optr);
         fprintf(optr, "D=M\n@%s\nD;JNE\n", get_arg1(parser));
         break;
     case C_LABEL:

@@ -13,11 +13,11 @@ bool is_cmd(const char *curr_cmd, const char *comparator) {
     return false;
 }
 
-// Load curr_curr_stack_addr is the actual pop command and the rest is persisting that value in memory
+// Hardware operation pop. vm command pop is decr_sp
 void pop(FILE *optr, const char *start_val, const char *offset) {
     write_offset_a(optr, start_val, offset);
     fprintf(optr, "@R13\nM=D\n");
-    load_curr_stack_addr(optr);
+    decr_sp(optr);
     fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
 }
 
@@ -39,7 +39,7 @@ void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
     }
     else if (is_cmd(curr_cmd, "temp")) {
         fprintf(optr, "@5\nD=A\n@%s\nD=D+A\n@R13\nM=D\n", offset);
-        load_curr_stack_addr(optr);
+        decr_sp(optr);
         fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
     }
     else if (is_cmd(curr_cmd, "pointer")) {
@@ -59,6 +59,7 @@ void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
     }
 }
 
+// Hardware operation push. vm command push is incr_sp
 void push(FILE *optr, const char *start_val, const char *offset) {
     write_offset_a(optr, start_val, offset);
     fprintf(optr, "A=D\nD=M\n@SP\nA=M\nM=D\n");
