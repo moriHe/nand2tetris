@@ -13,6 +13,7 @@ bool is_cmd(const char *curr_cmd, const char *comparator) {
     return false;
 }
 
+// Load curr_curr_stack_addr is the actual pop command and the rest is persisting that value in memory
 void pop(FILE *optr, const char *start_val, const char *offset) {
     write_offset_a(optr, start_val, offset);
     fprintf(optr, "@R13\nM=D\n");
