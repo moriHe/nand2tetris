@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
         write(&parser, optr, file_root);
     }
 
-    fprintf(optr, "(END)\n@END\n0;JMP");
+    fprintf(optr, "(FN_END)\n@FN_END\n0;JMP");
 
     fclose(optr);
     free(file_root);

@@ -12,6 +12,7 @@ enum CMD_TYPE_ENUM {
     C_ARITHMETIC,
     C_LABEL,
     C_IF,
+    C_GOTO,
     C_INVALID,
     C_NONE
 };

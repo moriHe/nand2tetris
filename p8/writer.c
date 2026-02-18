@@ -16,6 +16,9 @@ void write(struct Parser *parser, FILE *optr, const char *output_name) {
     case C_POP:
         write_pop(optr, parser, output_name);
         break;
+    case C_GOTO:
+        fprintf(optr, "@%s\n0;JMP\n", get_arg1(parser));
+        break;
     case C_IF:
         decr_sp_load_a(optr);
         fprintf(optr, "D=M\n@%s\nD;JNE\n", get_arg1(parser));

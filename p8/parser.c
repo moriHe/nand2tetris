@@ -10,6 +10,8 @@ enum CMD_TYPE_ENUM get_command_type(char *cmd) {
         return C_LABEL;
     if (strcmp(cmd, "if-goto") == 0)
         return C_IF;
+    if (strcmp(cmd, "goto") == 0)
+        return C_GOTO;
     for (size_t i = 0; i < arithmetic_cmds_len; i++) {
         if (strcmp(arithmetic_cmds[i], cmd) == 0)
             return C_ARITHMETIC;
