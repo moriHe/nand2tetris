@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
         write(&parser, optr, file_root);
     }
 
+    //TODO: Should make sure that the label keyword is reserved for function end loop
     fprintf(optr, "(FN_END)\n@FN_END\n0;JMP");
 
     fclose(optr);
