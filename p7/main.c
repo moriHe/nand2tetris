@@ -40,14 +40,14 @@ void incr_sp(FILE *optr) {
     fprintf(optr, "@SP\nM=M+1\n");
 }
 
-void decr_sp(FILE *optr) {
+void decr_sp_load_a(FILE *optr) {
     fprintf(optr, "@SP\nM=M-1\nA=M\n");
 }
 
 void calc_latest_two(FILE *optr, char *calc) {
-    decr_sp(optr);
+    decr_sp_load_a(optr);
     fprintf(optr, "D=M\n");    
-    decr_sp(optr);
+    decr_sp_load_a(optr);
     fprintf(optr, "%s\n", calc);
 }
 
@@ -86,7 +86,7 @@ void write_arithmetic(FILE *optr, struct Parser *parser) {
         calc_latest_two_push_result_stack(optr, "D=M-D");
     } 
     else if (strcmp(instr, NEG) == 0) {
-        decr_sp(optr);
+        decr_sp_load_a(optr);
         fprintf(optr, "M=-M\n");
         incr_sp(optr);
     }
@@ -106,7 +106,7 @@ void write_arithmetic(FILE *optr, struct Parser *parser) {
         calc_latest_two_push_result_stack(optr, "D=D|M");
     }
     else if (strcmp(instr, NOT) == 0) {
-        decr_sp(optr);
+        decr_sp_load_a(optr);
         fprintf(optr, "M=!M\n");
         incr_sp(optr);
     }
@@ -125,7 +125,7 @@ void write_offset_a(FILE *optr, const char *start_val, const char *offset) {
 void pop(FILE *optr, const char *start_val, const char *offset) {
     write_offset_a(optr, start_val, offset);
     fprintf(optr, "@R13\nM=D\n");
-    decr_sp(optr);
+    decr_sp_load_a(optr);
     fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
 }
 
@@ -195,7 +195,7 @@ void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
     }
     else if (is_cmd(curr_cmd, "temp")) {
         fprintf(optr, "@5\nD=A\n@%s\nD=D+A\n@R13\nM=D\n", offset);
-        decr_sp(optr);
+        decr_sp_load_a(optr);
         fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
     }
     else if (is_cmd(curr_cmd, "pointer")) {

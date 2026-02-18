@@ -17,7 +17,7 @@ bool is_cmd(const char *curr_cmd, const char *comparator) {
 void pop(FILE *optr, const char *start_val, const char *offset) {
     write_offset_a(optr, start_val, offset);
     fprintf(optr, "@R13\nM=D\n");
-    decr_sp(optr);
+    decr_sp_load_a(optr);
     fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
 }
 
@@ -39,7 +39,7 @@ void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
     }
     else if (is_cmd(curr_cmd, "temp")) {
         fprintf(optr, "@5\nD=A\n@%s\nD=D+A\n@R13\nM=D\n", offset);
-        decr_sp(optr);
+        decr_sp_load_a(optr);
         fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
     }
     else if (is_cmd(curr_cmd, "pointer")) {

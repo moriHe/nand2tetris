@@ -4,6 +4,6 @@
 #include <stdio.h>
 
 void incr_sp(FILE *optr);
-void decr_sp(FILE *optr);
+void decr_sp_load_a(FILE *optr);
 
 #endif
