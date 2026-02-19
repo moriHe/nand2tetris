@@ -13,6 +13,9 @@ enum CMD_TYPE_ENUM {
     C_LABEL,
     C_IF,
     C_GOTO,
+    C_FUNCTION,
+    C_CALL,
+    C_RETURN,
     C_INVALID,
     C_NONE
 };

@@ -12,6 +12,12 @@ enum CMD_TYPE_ENUM get_command_type(char *cmd) {
         return C_IF;
     if (strcmp(cmd, "goto") == 0)
         return C_GOTO;
+    if (strcmp(cmd, "call") == 0)
+        return C_CALL;
+    if (strcmp(cmd, "function") == 0)
+        return C_FUNCTION;
+    if (strcmp(cmd, "return") == 0)
+        return C_RETURN;
     for (size_t i = 0; i < arithmetic_cmds_len; i++) {
         if (strcmp(arithmetic_cmds[i], cmd) == 0)
             return C_ARITHMETIC;

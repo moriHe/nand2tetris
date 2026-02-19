@@ -6,7 +6,6 @@ void write_offset_a(FILE *optr, const char *start_val, const char *offset) {
     fprintf(optr, "@%s\nD=M\n@%s\nD=D+A\n", start_val, offset);
 }
 
-
 bool is_cmd(const char *curr_cmd, const char *comparator) {
     if (strcmp(curr_cmd, comparator) == 0)
         return true;
