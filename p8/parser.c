@@ -57,6 +57,11 @@ void set_parser(struct Parser *parser, char *next) {
     }
     parser->current_index++;
     parser->current_command_type = get_command_type(parser->current_commands[0]);
+    enum CMD_TYPE_ENUM current_cte = get_current_cmd_type(parser);
+    if (current_cte == C_CALL)
+        parser->current_call_index++;
+    else if (current_cte == C_FUNCTION)
+        parser->current_fn = get_arg1(parser);
 }
 
 bool advance(struct Parser *parser) {

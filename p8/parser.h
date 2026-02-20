@@ -24,7 +24,9 @@ struct Parser {
     FILE *input_file;
     char current_commands[3][50];
     enum CMD_TYPE_ENUM current_command_type;
-    int current_index; // needs to start at -1
+    int current_index; // row index needs to start at -1
+    int current_call_index; // starts at 0
+    char *current_fn;
 };
 
 enum CMD_TYPE_ENUM get_command_type(char *cmd);

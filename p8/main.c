@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     char *file_root = get_file_root(iptr);
 
     FILE *vm_ptr = fopen(iptr, "r");    
-    struct Parser parser = {vm_ptr, {0}, C_NONE, -1};
+    struct Parser parser = {vm_ptr, {0}, C_NONE, -1, 0, NULL};
 
     char output_name[ strlen(file_root) + 4];
     sprintf(output_name, "%s.asm", file_root);

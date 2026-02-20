@@ -36,7 +36,27 @@ void write(struct Parser *parser, FILE *optr, const char *output_name) {
         }
         break;
     case C_CALL:
-        // TODO: Implement
+        // Safe return address on the stack
+        fprintf(optr, "@%s$ret.%d\nD=A\n@SP\nA=M\nM=D\n", parser->current_fn, parser->current_call_index);
+        incr_sp(optr);
+
+        // Safe old LCL, ARG, THIS, THAT
+        fprintf(optr, "@LCL\nD=M\n@SP\nA=M\nM=D\n");
+        incr_sp(optr);
+        fprintf(optr, "@ARG\nD=M\n@SP\nA=M\nM=D\n");
+        incr_sp(optr);
+        fprintf(optr, "@THIS\nD=M\n@SP\nA=M\nM=D\n");
+        incr_sp(optr);
+        fprintf(optr, "@THAT\nD=M\n@SP\nA=M\nM=D\n");
+        incr_sp(optr);
+
+        // Safe new ARG and LCL
+        fprintf(optr, "@SP\nD=M\n@5\nD=D-A\n@%s\nD=D-A\n@ARG\nM=D\n", get_arg2(parser));
+        fprintf(optr, "@SP\nD=M\n@LCL\nM=D\n");
+
+        // TODO: Outsource goto command. It is used here and in case C_GOTO
+        fprintf(optr, "@%s\n0;JMP\n", get_arg1(parser));
+        fprintf(optr, "(%s$ret.%d)\n", parser->current_fn, parser->current_call_index);
         break;
     case C_RETURN:
         // Temp store LCL
