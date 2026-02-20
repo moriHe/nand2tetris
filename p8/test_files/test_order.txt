@@ -17,4 +17,9 @@ I dont care yet for naming it with the function name before
 3. SimpleFunction
 4. NestedCall
 5. FibonacciElement
+-- Initialize Stack Pointer to 256
+-- Call Sys.init
+-- Multi File Handling
+-- Statics = Filename.Index (I think I already implemented that)
+-- label, goto, if-goto declared as functionName$labelName
 6. StaticsTest

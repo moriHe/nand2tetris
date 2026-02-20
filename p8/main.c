@@ -1,6 +1,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #include "parser.h"
 #include "writer.h"
@@ -10,7 +12,28 @@ int main(int argc, char *argv[]) {
     if (!main_args_validated(argc, argv))
         return 1;
     
+    int status;
+    struct stat st_buf;
     const char *iptr = argv[1];
+    status = stat(iptr, &st_buf);
+    if (status != 0) {
+        fprintf(stderr, "Error: Wrong status");
+        return 1;
+    }
+    if (S_ISDIR(st_buf.st_mode)) {
+        printf("%s is a directory.\n", iptr);
+    } else if (S_ISREG(st_buf.st_mode)) {
+        char *ending = strrchr(argv[1], '.');
+        if (strcmp(ending, ".vm") != 0) {
+            fprintf(stderr, "Error: Wrong input format. Expected .vm, got %s instead\n", ending);
+            return 1;
+        }
+        printf("%s is a regular file.\n", iptr);
+    } else {
+        fprintf(stderr, "Error: Neither file nor dir");
+        return 1;
+    }
+    return 0;
     char *file_root = get_file_root(iptr);
 
     FILE *vm_ptr = fopen(iptr, "r");    

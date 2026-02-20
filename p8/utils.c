@@ -22,12 +22,6 @@ bool main_args_validated(int argc, char *argv[]) {
         fprintf(stderr, "Error: Expected 1 arg (file path), got %d instead.\n", argc);
         return false;
     }
-
-    char *ending = strrchr(argv[1], '.');
-    if (strcmp(ending, ".vm") != 0) {
-        fprintf(stderr, "Error: Wrong input format. Expected .vm, got %s instead\n", ending);
-        return false;
-    }
-
+    
     return true;
 }
