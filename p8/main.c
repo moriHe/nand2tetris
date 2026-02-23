@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <libgen.h>
+#include <string.h>
 
 #include "parser.h"
 #include "writer.h"
@@ -22,35 +25,42 @@ int main(int argc, char *argv[]) {
     }
     if (S_ISDIR(st_buf.st_mode)) {
         printf("%s is a directory.\n", iptr);
-    } else if (S_ISREG(st_buf.st_mode)) {
-        char *ending = strrchr(argv[1], '.');
-        if (strcmp(ending, ".vm") != 0) {
-            fprintf(stderr, "Error: Wrong input format. Expected .vm, got %s instead\n", ending);
+        DIR *dir;
+        struct dirent *entry;
+
+        dir = opendir(iptr);
+        if (dir == NULL) {
+            fprintf(stderr, "Error: Could not open dir");
             return 1;
         }
-        printf("%s is a regular file.\n", iptr);
+
+        char *iptr_tmp = strdup(iptr);
+        char *folder_name = basename(iptr_tmp);
+        printf("foldername=%s\n", folder_name);
+        while ((entry = readdir(dir)) != NULL) {
+            char *name = entry->d_name;
+                            printf("name=%s\n", name);
+
+            if (name != NULL) {
+                char *vm_suffix = strstr(name, ".vm");
+                if (vm_suffix) {
+                    char *file_root = get_file_root(name);
+                    process_single_file(name, folder_name, file_root);
+                }
+            }
+            printf("found=%s\n", name);
+            
+        }
+    } else if (S_ISREG(st_buf.st_mode)) {
+        printf("%s is a  file.\n", iptr);
+        char *file_root = get_file_root(iptr);
+        char output_name[ strlen(file_root) + 4];
+        sprintf(output_name, "%s.asm", file_root);
+        process_single_file(iptr, output_name, file_root);
     } else {
         fprintf(stderr, "Error: Neither file nor dir");
         return 1;
     }
-    return 0;
-    char *file_root = get_file_root(iptr);
-
-    FILE *vm_ptr = fopen(iptr, "r");    
-    struct Parser parser = {vm_ptr, {0}, C_NONE, -1, 0, NULL};
-
-    char output_name[ strlen(file_root) + 4];
-    sprintf(output_name, "%s.asm", file_root);
-    FILE *optr = fopen(output_name, "w");
-
-    while (advance(&parser)) {
-        write(&parser, optr, file_root);
-    }
-
-    //TODO: Should make sure that the label keyword is reserved for function end loop
-    fprintf(optr, "(FN_END)\n@FN_END\n0;JMP");
-
-    fclose(optr);
-    free(file_root);
+    
     return 0;
 }
