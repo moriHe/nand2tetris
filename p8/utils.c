@@ -31,14 +31,19 @@ bool main_args_validated(int argc, char *argv[]) {
     return true;
 }
 
-void process_single_file(const char *iptr, char *output_name, char *file_root) {
+void process_single_file(const char *iptr, char *output_name, char *file_root, bool is_dir) {
 
-    FILE *vm_ptr = fopen(iptr, "r");    
+    FILE *vm_ptr = fopen(iptr, "r");  
+    if (vm_ptr == NULL) {
+        fprintf(stderr, "Error: Could not open file %p\n", vm_ptr);
+        return;
+    }
     struct Parser parser = {vm_ptr, {0}, C_NONE, -1, 0, NULL};
 
 
     FILE *optr = fopen(output_name, "w");
-
+    fprintf(optr, "@256\nD=A\n@SP\nM=D\n");
+    //TODO Call Sys.init (use C_CALL logic from writer) fprintf(optr, "@Sys.init\n0;JMP\n");
     while (advance(&parser)) {
         write(&parser, optr, file_root);
     }

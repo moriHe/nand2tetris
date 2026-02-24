@@ -36,27 +36,27 @@ int main(int argc, char *argv[]) {
 
         char *iptr_tmp = strdup(iptr);
         char *folder_name = basename(iptr_tmp);
-        printf("foldername=%s\n", folder_name);
         while ((entry = readdir(dir)) != NULL) {
             char *name = entry->d_name;
-                            printf("name=%s\n", name);
 
             if (name != NULL) {
                 char *vm_suffix = strstr(name, ".vm");
                 if (vm_suffix) {
                     char *file_root = get_file_root(name);
-                    process_single_file(name, folder_name, file_root);
+                    char *iptr_single_file;
+                    asprintf(&iptr_single_file, "%s/%s", iptr, name);
+                    char *output_name;
+                    asprintf(&output_name, "%s.asm", folder_name);
+                    process_single_file(iptr_single_file, output_name, file_root, true);
                 }
-            }
-            printf("found=%s\n", name);
-            
+            }            
         }
     } else if (S_ISREG(st_buf.st_mode)) {
         printf("%s is a  file.\n", iptr);
         char *file_root = get_file_root(iptr);
         char output_name[ strlen(file_root) + 4];
         sprintf(output_name, "%s.asm", file_root);
-        process_single_file(iptr, output_name, file_root);
+        process_single_file(iptr, output_name, file_root, false);
     } else {
         fprintf(stderr, "Error: Neither file nor dir");
         return 1;
