@@ -44,11 +44,13 @@ void process_single_file(const char *iptr, char *output_name, char *file_root, b
     FILE *optr = fopen(output_name, "w");
     fprintf(optr, "@256\nD=A\n@SP\nM=D\n");
     //TODO Call Sys.init (use C_CALL logic from writer) fprintf(optr, "@Sys.init\n0;JMP\n");
+    //TODO: Parser should probably be passed into process_single_file so dirs share the same indizes
     while (advance(&parser)) {
         write(&parser, optr, file_root);
     }
 
     //TODO: Should make sure that the label keyword is reserved for function end loop
+    // ************ TODO IMPROTANT ************** Needs to be placed outside the function because dir handling
     fprintf(optr, "(FN_END)\n@FN_END\n0;JMP");
 
     fclose(optr);
