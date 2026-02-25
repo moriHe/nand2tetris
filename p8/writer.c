@@ -5,17 +5,17 @@
 #include "writer_push_pop.h"
 #include "stack_ptr.h"
 
-void write(struct Parser *parser, FILE *optr, const char *output_name) {
+void write(struct Parser *parser, FILE *optr, const char *file_name) {
     switch (get_current_cmd_type(parser))
     {
     case C_ARITHMETIC:
         write_arithmetic(optr, parser);
         break;
     case C_PUSH:
-         write_push(optr, parser, output_name);
+         write_push(optr, parser, file_name);
          break;
     case C_POP:
-        write_pop(optr, parser, output_name);
+        write_pop(optr, parser, file_name);
         break;
     case C_GOTO:
         fprintf(optr, "@%s\n0;JMP\n", get_arg1(parser));

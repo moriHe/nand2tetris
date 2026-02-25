@@ -6,7 +6,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+struct Parser;
+
 char *get_file_root(const char *iptr);
 bool main_args_validated(int argc, char *argv[]);
-void process_single_file(const char *iptr, char *output_name, char *file_root, bool is_dir);
+void process_single_file(const char *iptr, FILE *optr, char *file_root, bool is_dir, struct Parser *parser);
 #endif

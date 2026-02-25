@@ -31,28 +31,18 @@ bool main_args_validated(int argc, char *argv[]) {
     return true;
 }
 
-void process_single_file(const char *iptr, char *output_name, char *file_root, bool is_dir) {
+void process_single_file(const char *iptr, FILE *optr, char *file_root, bool is_dir, struct Parser *parser) {
 
     FILE *vm_ptr = fopen(iptr, "r");  
     if (vm_ptr == NULL) {
         fprintf(stderr, "Error: Could not open file %p\n", vm_ptr);
         return;
     }
-    struct Parser parser = {vm_ptr, {0}, C_NONE, -1, 0, NULL};
+    parser->input_file = vm_ptr;
 
-
-    FILE *optr = fopen(output_name, "w");
-    fprintf(optr, "@256\nD=A\n@SP\nM=D\n");
-    //TODO Call Sys.init (use C_CALL logic from writer) fprintf(optr, "@Sys.init\n0;JMP\n");
-    //TODO: Parser should probably be passed into process_single_file so dirs share the same indizes
-    while (advance(&parser)) {
-        write(&parser, optr, file_root);
+    while (advance(parser)) {
+        write(parser, optr, file_root);
     }
 
-    //TODO: Should make sure that the label keyword is reserved for function end loop
-    // ************ TODO IMPROTANT ************** Needs to be placed outside the function because dir handling
-    fprintf(optr, "(FN_END)\n@FN_END\n0;JMP");
-
-    fclose(optr);
     free(file_root);
 }
