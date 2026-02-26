@@ -49,12 +49,13 @@ void write_pop(FILE *optr, struct Parser *parser, const char *output_name) {
         }
     } else if (is_cmd(curr_cmd, "static")) {
         char addr[256];
-        char idx_str[20];
-        snprintf(idx_str, sizeof(idx_str), "%d", parser->current_index);
         strcpy(addr, output_name);
         strcat(addr, ".");
-        strcat(addr, idx_str);
-        pop(optr, addr, offset);
+        strcat(addr, offset);
+
+        fprintf(optr, "@%s\nD=A\n@R13\nM=D\n", addr);
+        decr_sp_load_a(optr);
+        fprintf(optr, "D=M\n@R13\nA=M\nM=D\n");
     }
 }
 
@@ -98,11 +99,9 @@ void write_push(FILE *optr, struct Parser *parser, const char *output_name) {
         incr_sp(optr);
     } else if (is_cmd(curr_cmd, "static")) {
         char addr[256];
-        char idx_str[20];
-        snprintf(idx_str, sizeof(idx_str), "%d", parser->current_index);
         strcpy(addr, output_name);
         strcat(addr, ".");
-        strcat(addr, idx_str);
-        push(optr, addr, offset);
+        strcat(addr, offset);
+        push(optr, addr, "0");
     }
 }
