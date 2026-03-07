@@ -1,0 +1,30 @@
+class SnakeNode {
+    field int location;
+    field SnakeNode next;
+
+    constructor SnakeNode new(int loc, SnakeNode n) {
+        let location = loc;
+        let next = n;
+        return this;
+    }
+
+    method int getLocation() { return location; }
+    method void setLocation(int loc) { let location = loc; return; }
+    method SnakeNode getNext() { return next; }
+    method void setNext(SnakeNode n) { let next = n; return; }
+
+    method void disposeSingle() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+
+    method void dispose() {
+        if (~(next = 0)) {
+            do next.dispose();
+        }
+
+        do Memory.deAlloc(this);
+        return;
+    }
+}

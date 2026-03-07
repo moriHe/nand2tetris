@@ -1,0 +1,355 @@
+function Main.main 7
+    push constant 120
+    push constant 32
+    call Math.multiply 2
+    push constant 16
+    add
+    pop local 1
+    push local 1
+    push constant 0
+    call SnakeNode.new 2
+    pop local 3
+    push local 1
+    push constant 1
+    sub
+    push local 3
+    call SnakeNode.new 2
+    pop local 4
+    push local 4
+    call SnakeNode.getLocation 1
+    call Main.draw 1
+    pop temp 0
+    push local 3
+    call SnakeNode.getLocation 1
+    call Main.draw 1
+    pop temp 0
+label Main_0
+    push constant 1
+    neg
+    not
+    if-goto Main_1
+    call Keyboard.keyPressed 0
+    pop local 0
+    push local 0
+    push constant 0
+    gt
+    not
+    if-goto Main_3
+    push local 4
+    call SnakeNode.getLocation 1
+    pop local 2
+    push local 0
+    push constant 131
+    eq
+    not
+    if-goto Main_5
+    push local 2
+    push constant 512
+    sub
+    pop local 2
+    goto Main_4
+label Main_5
+label Main_4
+    push local 0
+    push constant 133
+    eq
+    not
+    if-goto Main_7
+    push local 2
+    push constant 512
+    add
+    pop local 2
+    goto Main_6
+label Main_7
+label Main_6
+    push local 0
+    push constant 130
+    eq
+    not
+    if-goto Main_9
+    push local 2
+    push constant 1
+    sub
+    pop local 2
+    goto Main_8
+label Main_9
+label Main_8
+    push local 0
+    push constant 132
+    eq
+    not
+    if-goto Main_11
+    push local 2
+    push constant 1
+    add
+    pop local 2
+    goto Main_10
+label Main_11
+label Main_10
+    push local 2
+    push local 4
+    call SnakeNode.new 2
+    pop local 4
+    push local 4
+    call SnakeNode.getLocation 1
+    call Main.draw 1
+    pop temp 0
+    push local 4
+    pop local 6
+    push local 6
+    call SnakeNode.getNext 1
+    pop local 5
+label Main_12
+    push local 5
+    call SnakeNode.getNext 1
+    push constant 0
+    eq
+    not
+    not
+    if-goto Main_13
+    push local 5
+    pop local 6
+    push local 6
+    call SnakeNode.getNext 1
+    pop local 5
+    goto Main_12
+label Main_13
+    push local 5
+    call SnakeNode.getLocation 1
+    call Main.erase 1
+    pop temp 0
+    push local 5
+    call SnakeNode.dispose 1
+    pop temp 0
+    push local 6
+    push constant 0
+    call SnakeNode.setNext 2
+    pop temp 0
+    push constant 25
+    call Sys.wait 1
+    pop temp 0
+    goto Main_2
+label Main_3
+label Main_2
+    goto Main_0
+label Main_1
+    push constant 0
+    return
+function Main.draw 1
+    push constant 16384
+    push argument 0
+    add
+    pop local 0
+    push local 0
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 32
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 64
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 96
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 128
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 160
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 192
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 224
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 256
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 288
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 320
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 352
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 384
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 416
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 448
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 480
+    add
+    push constant 1
+    neg
+    call Memory.poke 2
+    pop temp 0
+    push constant 0
+    return
+function Main.erase 1
+    push constant 16384
+    push argument 0
+    add
+    pop local 0
+    push local 0
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 32
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 64
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 96
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 128
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 160
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 192
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 224
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 256
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 288
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 320
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 352
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 384
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 416
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 448
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push local 0
+    push constant 480
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    push constant 0
+    return
