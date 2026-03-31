@@ -1,10 +1,12 @@
 class SnakeNode {
     field int location;
     field SnakeNode next;
+    field SnakeNode prev;
 
-    constructor SnakeNode new(int loc, SnakeNode n) {
+    constructor SnakeNode new(int loc, SnakeNode next, SnakeNode prev) {
         let location = loc;
-        let next = n;
+        let next = next;
+        let prev = prev;
         return this;
     }
 
@@ -12,7 +14,15 @@ class SnakeNode {
     method void setLocation(int loc) { let location = loc; return; }
     method SnakeNode getNext() { return next; }
     method void setNext(SnakeNode n) { let next = n; return; }
+    method SnakeNode getPrev() { return prev; }
+    method void setPrev(SnakeNode p) { let prev = p; return; }
 
+    method SnakeNode erase() {
+        do prev.setNext(null);
+        do Utils.drawWhite(getLocation());
+        do disposeSingle();
+        return prev;
+    }
     method void disposeSingle() {
         do Memory.deAlloc(this);
         return;
@@ -23,7 +33,6 @@ class SnakeNode {
         if (~(next = 0)) {
             do next.dispose();
         }
-
         do Memory.deAlloc(this);
         return;
     }

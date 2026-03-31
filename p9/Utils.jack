@@ -1,0 +1,43 @@
+class Utils {
+
+    function void initGameField() {            
+        do Output.moveCursor(2, 22);
+        do Output.printString("Press RIGHT to start");
+        return;
+    }
+
+    function void startGame() {
+        do Output.moveCursor(2, 22);
+        do Output.printString("                    ");
+
+        return;
+    }
+
+    function void gameOver() {
+        do Output.moveCursor(2, 22);
+        do Output.printString("Game Over");
+        return;
+    }
+
+    function void drawBlack(int memAddress) {
+        var int i;
+        let i = 0;
+
+        while (i < 512) { // 16 Zeilen * 32 Wörter pro Zeile = 512
+            do Memory.poke(memAddress + i, -1);
+            let i = i + 32;
+        }
+        return;
+    }
+
+    function void drawWhite(int memAddress) {
+        var int i;
+        let i = 0;
+
+        while (i < 512) { // 16 Zeilen * 32 Wörter pro Zeile = 512
+            do Memory.poke(memAddress + i, 0);
+            let i = i + 32;
+        }
+        return;
+    }
+}

@@ -1,122 +1,118 @@
+// address = SCREEN + (y * 32) + (x / 16)
+// drawn bit = x % 16;
+// There are 0..255 rows and 0..511 cols
+
+
+// SCREEN + (32 * 16 * n) + p        | n < 16 | p < 32
+// 32 Wörter = 1 Zeile; 16 * 1 Zeile = 1 grid
+// p = Grids innerhalb einer Zeile
 class Main {
-	function void main() {
-		var int key, currentKey, startLoc, nextLoc, foodLoc, seed;
-        var boolean exit;
-        var SnakeNode snakeTail, snakeHead, nextNode, currentNode;
+    function void main() {
+        // TODO: Add a int that iterates through FreeNode and uses a new food. Starts at 20 for example
+        // TODO: Add a second int that counts eaten food and changes first int every so often
+        var int jump;
+        var int newLocation, currentFood;
+        var int validScreenAddrTotal, vsatLoop;
+        var FreeNode startFrees, tmpFrees;
+        var int key, currentDir, SCREEN_START, SCREEN_END, LEFT, RIGHT, UP, DOWN, DIR_RIGHT, DIR_LEFT, DIR_UP, DIR_DOWN;
+        var SnakeNode tail, head, tmpTail, tmpHead;
+        var boolean isGame;
 
-        let foodLoc = (7 * 512) + 16;
-        do Main.draw(foodLoc);
-        
-        let exit = false;
-        let currentKey = 0;
-        let startLoc = (10 * 512) + 16;
-        let nextLoc = startLoc;
-        let snakeTail = SnakeNode.new(startLoc, null);
-        let snakeHead = SnakeNode.new(startLoc + 1, snakeTail);
-        do Main.draw(snakeHead.getLocation());
-        do Main.draw(snakeTail.getLocation());
-        
-        do Output.moveCursor(10, 22);
-        do Output.printString("Press RIGHT to start");
-        while (~(Keyboard.keyPressed() = 132)) {
-            let seed = seed + 1;
-            if (seed > 32766) { let seed = 0; }
-            do Sys.wait(10); // Kurze Pause, um den Simulator nicht zu braten
+        let jump = 123;
+        //SCREEN_START + (32 * 16 * 15) + 31;
+        let validScreenAddrTotal = (32 * 16 * 15) + 31;
+        let vsatLoop = validScreenAddrTotal;
+        let startFrees = FreeNode.new(SCREEN_START + vsatLoop, null, null);
+        let vsatLoop = vsatLoop - 1;
+        while (vsatLoop > 0 | vsatLoop = 0) {
+            let tmpFrees = FreeNode.new(SCREEN_START + vsatLoop, startFrees, null); 
+            do startFrees.setPrev(tmpFrees);
+            let startFrees = tmpFrees;
+            let vsatLoop = vsatLoop - 1;
         }
-        do Output.moveCursor(10, 22);
-        do Output.printString("                     ");
-		while (~exit) {
-                let key = Keyboard.keyPressed();
-                if (key > 0) {
-                    let currentKey = Main.updateDirection(key, currentKey);
-                }
-                if (~(currentKey = 0)) {
-                    let nextLoc = Main.updateNextLoc(snakeHead.getLocation(), currentKey); 
-                    if ((nextLoc < 0) | (nextLoc > 7680)) {
-                        let exit = true;
-                    } else {
-                        let snakeHead = SnakeNode.new(nextLoc, snakeHead);
-                        do Main.draw(snakeHead.getLocation());
-                        if (~(nextLoc = foodLoc)) {
-                            let currentNode = snakeHead;
-                            let nextNode = currentNode.getNext();
-                            while (~(nextNode.getNext() = 0)) {
-                                let currentNode = nextNode;
-                                let nextNode = currentNode.getNext();
-                            }
+        /* Init key and screen related identifiers */
+        let key = 0;
+        let SCREEN_START = 16384;
+        let SCREEN_END = 24575;
+        let LEFT = 130;
+        let RIGHT = 132;
+        let UP = 131;
+        let DOWN = 133;
+        let DIR_RIGHT = 1;
+        let DIR_LEFT = -1;
+        let DIR_DOWN = 512;
+        let DIR_UP = -512;
+        let isGame = true;
 
-                            do Main.erase(nextNode.getLocation());
-                            do nextNode.dispose();
-                            do currentNode.setNext(0);
-                        }
-                    }
-                }
-            do Sys.wait(150);
+        /* Init Snake with 2 segments. Next (sec arg) points in the direction of the tail and vice versa */
+        let tail = SnakeNode.new(SCREEN_START, null, null);
+        let head = SnakeNode.new((SCREEN_START + 1), tail, null);
+        do tail.setPrev(head);
 
-		}
-        do Output.moveCursor(10, 27);
-        do Output.printString("GAME OVER");
-		return;
-	}
-
-    function int updateNextLoc(int currentLoc, int currentKey) {
-        if (currentKey = 131) { return currentLoc - 512; }     // Up
-        if (currentKey = 133) { return currentLoc + 512; }     // Down
-        if (currentKey = 130) { return currentLoc - 1; }       // Left
-        if (currentKey = 132) { return currentLoc + 1; }       // Right
+        /* Await Game Start */
+        do Utils.initGameField();
+        while (~(key = RIGHT)) {
+            let key = Keyboard.keyPressed();
+            do Sys.wait(100);
+        }
+        let currentDir = 1;
+        do Utils.startGame();
+        do Utils.drawBlack(head.getLocation());
+        do Utils.drawBlack(tail.getLocation());
         
-        return currentLoc;
-    }
+        let currentFood = SCREEN_START + (32 * 16 * 15) + 31;
+        do Utils.drawBlack(currentFood);
+        /* Game Loop */
+        while (isGame) {
+            let key = Keyboard.keyPressed();
+            if (key = LEFT & ~(currentDir = DIR_RIGHT)) { let currentDir = -1; }
+            if (key = RIGHT & ~(currentDir = DIR_LEFT)) { let currentDir = 1; }
+            if (key = UP & ~(currentDir = DIR_DOWN)) { let currentDir = -512; }
+            if (key = DOWN & ~(currentDir = DIR_UP)) { let currentDir = 512; }
 
-    function int updateDirection(int key, int current) {
-        if ((key = 131) & ~(current = 133)) { return 131; } // Up if not Down
-        if ((key = 133) & ~(current = 131)) { return 133; } // Down if not Up
-        if ((key = 130) & ~(current = 132)) { return 130; } // Left if not Right
-        if ((key = 132) & ~(current = 130)) { return 132; } // Right if not Left
-        return current;
-    }
-
-	function void draw(int loc) {
-        var int memAddress; 
-        let memAddress = 16384 + loc;
-        do Memory.poke(memAddress, -1);
-        do Memory.poke(memAddress + 32, -1);
-        do Memory.poke(memAddress + 64, -1);
-        do Memory.poke(memAddress + 96, -1);
-        do Memory.poke(memAddress + 128, -1);
-        do Memory.poke(memAddress + 160, -1);
-        do Memory.poke(memAddress + 192, -1);
-        do Memory.poke(memAddress + 224, -1);
-        do Memory.poke(memAddress + 256, -1);
-        do Memory.poke(memAddress + 288, -1);
-        do Memory.poke(memAddress + 320, -1);
-        do Memory.poke(memAddress + 352, -1);
-        do Memory.poke(memAddress + 384, -1);
-        do Memory.poke(memAddress + 416, -1);
-        do Memory.poke(memAddress + 448, -1);
-        do Memory.poke(memAddress + 480, -1);
+            /* Create new head, establish relation to old head */
+            let newLocation = (head.getLocation() + currentDir);           
+            if (newLocation > SCREEN_END | newLocation < SCREEN_START | Main.isVertOutOfRange(newLocation) | Main.isSnakeNode(newLocation, currentFood)) {
+                let isGame = false;
+            } else {
+                if (~(newLocation = currentFood)) {
+                    /* Add FreeNode to linked list */
+                    let tmpFrees = FreeNode.new(tail.getLocation(), startFrees, null); 
+                    do startFrees.setPrev(tmpFrees);
+                    let startFrees = tmpFrees;
+                    /* Remove tail segment if not eating. Set penultimate segment as new tail */
+                    let tail = tail.erase();                     // Set new tail
+                } else {
+                    let currentFood = startFrees.getFoodLocation(jump);
+                    do Utils.drawBlack(currentFood);
+                }
+            let tmpHead = SnakeNode.new((head.getLocation() + currentDir), head, null);      // Create new head
+            do head.setPrev(tmpHead);                                                       // Reference new head in old head
+            let head = tmpHead;                                                             // Set new head
+            do Utils.drawBlack(head.getLocation());                                         // Draw new head
+            do startFrees.erase(head.getLocation());
+            }
+            do Sys.wait(100);
+        }
+        do Utils.gameOver();
         return;
     }
 
-	function void erase(int loc) {
-		var int memAddress;
-		let memAddress = 16384 + loc;
-		do Memory.poke(memAddress, 0);
-		do Memory.poke(memAddress + 32, 0);
-        do Memory.poke(memAddress + 64, 0);
-        do Memory.poke(memAddress + 96, 0);
-        do Memory.poke(memAddress + 128, 0);
-        do Memory.poke(memAddress + 160, 0);
-        do Memory.poke(memAddress + 192, 0);
-        do Memory.poke(memAddress + 224, 0);
-        do Memory.poke(memAddress + 256, 0);
-        do Memory.poke(memAddress + 288, 0);
-        do Memory.poke(memAddress + 320, 0);
-        do Memory.poke(memAddress + 352, 0);
-        do Memory.poke(memAddress + 384, 0);
-        do Memory.poke(memAddress + 416, 0);
-        do Memory.poke(memAddress + 448, 0);
-        do Memory.poke(memAddress + 480, 0);
-		return;
-	}
+    function boolean isVertOutOfRange(int loc) {
+        var int raw, row, remainder;
+        let raw = loc - 16384;
+        if (raw = 0) { let row = 0; } else { let row = raw / 32; }
+        if (row = 0) { let remainder = 0; } else { let remainder = row - (16 * (row / 16)); }
+        if (remainder = 0) { return false; }
+        return true;
+    }
+
+    function boolean isSnakeNode(int newLocation, int currentFood) {
+        var int value;
+        let value = Memory.peek(newLocation);
+        if (~(newLocation = currentFood) & ~(value = 0)) {
+            return true;
+        }
+        return false;
+    }
 }

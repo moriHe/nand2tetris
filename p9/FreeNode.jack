@@ -1,0 +1,54 @@
+class FreeNode {
+    field int location;
+    field FreeNode next;
+    field FreeNode prev;
+
+    constructor FreeNode new(int loc, FreeNode next, FreeNode prev) {
+        let location = loc;
+        let next = next;
+        let prev = prev;
+        return this;
+    }
+
+    // next moves in the direction of tail, prev in the direction of head
+    method int getLocation() { return location; }
+    method void setLocation(int loc) { let location = loc; return; }
+    method FreeNode getNext() { return next; }
+    method void setNext(FreeNode n) { let next = n; return; }
+    method FreeNode getPrev() { return prev; }
+    method void setPrev(FreeNode p) { let prev = p; return; }
+
+    
+    method void erase(int loc) {
+        if (loc = location) {
+            if (~(next = null)) { 
+                do next.setPrev(prev);
+            }
+            if (~(prev = null)) {
+                do prev.setNext(next);
+            }
+            do disposeSingle();
+            return;
+        } else {
+            if (~(next = null)) {
+                do next.erase(loc);
+            }
+        }
+        return;
+    }
+
+    method void disposeSingle() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method int getFoodLocation(int jump) {
+        if (jump = 0 | next = null) {
+            return location;
+        }
+        
+        let jump = jump - 1;
+        return getFoodLocation(jump);
+    }    
+}
+
