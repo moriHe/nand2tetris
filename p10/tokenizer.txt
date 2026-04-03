@@ -1,0 +1,40 @@
+- Tokenizer xml starts with <tokens></tokens>
+- Special formatting for < = &lt; > = &gt; & = &amp; " = &quot; (the ; is part of the expressions)
+- Strings get printed / stored without ""
+
+Token types, token type values and xml namespaces
+
+**********
+KEYWORD
+class, constructor, method, field, static, var, int, char, boolean,
+void, true, false, null, this, let, do, if, else, while, return, function
+<keyword></keyword>
+**********
+
+
+**********
+SYMBOL
+{}()[].,;+-*/&|<>=~
+<symbol></symbol>
+**********
+
+
+*********
+IDENTIFIER
+Every class, method, function, variable name
+<identifier></identifier>
+*********
+
+
+********
+INT_CONST
+Whole number between 0 and 32767
+<intConst></intConst>
+********
+
+
+********
+STRING_CONST
+Strings
+<stringConst></stringConst>
+********

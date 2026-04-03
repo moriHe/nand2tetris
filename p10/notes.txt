@@ -1,0 +1,37 @@
+< is %lt;
+> is &gt;
+" is &quot;
+& is amp
+
+Test file order:
+1) ExpressionLessSquare
+2) Square
+3) ArrayTest
+
+Step 1: 
+- Build Tokenizer
+- Input jack file or dir
+- Output xxxT.xml
+- Compare to xxxT.xml from test_files
+- The xml output in this step is only for testing purposed. It is not necessarialy needed in Step 2
+
+Step 2:
+- Build Parser
+- Input jack file or dir
+- Output xxx.xml
+- Compare to xxx.xml from test_files
+- Ping pongs between parser and tokenizer to output the final xml
+- Important rules:
+-- do not implement expressions and array-oriented commands
+
+Step 3:
+- Handle expressions and array-oriented commands
+
+Overall:
+1) The analyzer constructs a JackTokenizer for each jack file handling the input
+2) The analyzer constructs an output file named Xxx.xml 
+3) The analyzer then calls the compileClass routine of the CompilationEngine
+4) The CompilationEngine call each other recursively emitting XML output, meaning: Tokenizer and Parser call each other recursively
+
+Important:
+- 1 jack file compiles into 1 xml file

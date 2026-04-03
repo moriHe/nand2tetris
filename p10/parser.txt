@@ -1,0 +1,39 @@
+1) Program Structure
+
+compileClass
+
+compileClassVarDec
+satic, field
+
+compileSubroutine
+method, function, constructor
+
+compileParameterList
+everything inside ()
+
+compileSubroutineBody
+Everything inside { }
+
+compileVarDec
+vars
+
+2) Statements
+compileStatements
+sequence of statemets
+
+compileLet
+
+compileIf
+
+compileWhile
+
+compileDo
+
+compileReturn
+
+3) Expressions
+compileExpression
+
+compileTerm
+
+compileExpressionList
