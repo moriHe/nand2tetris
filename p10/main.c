@@ -61,11 +61,21 @@ bool is_line_overflow(char* buf, FILE *jack_file) {
 
 void parse_file(FILE *jack_file) {
     //strchr("{}()[].,;+-*/&|<>=~", c) != NULL;
-    char buf[2048];
-
-    while (fgets(buf, sizeof buf, jack_file) != NULL) {
-    // TODO: fgets -> strip comments, flag comment
-    // TODO go over each char in fgets and process
+    char current_instr[2048];
+    int i;
+    int c;
+    bool is_comment = false;
+    // use ungetc?
+    while ((c = fgetc(jack_file)) != EOF) {
+        if (c == '/') {
+            int next = fgetc(jack_file);
+            if (next == '/' || next == '*') {
+                is_comment = true;
+            } else {
+                ungetc(next, jack_file);
+                // TODO: Handle division
+            }
+        }
     }
 
 }
