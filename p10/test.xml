@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tokens>
+  <keyword>class</keyword>
+  <Square/>
+  <symbol> { </symbol>
+  <keyword>field</keyword>
+  <keyword>int</keyword>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ; </symbol>
+  <keyword>field</keyword>
+  <keyword>int</keyword>
+  <size/>
+  <symbol> ; </symbol>
+  <keyword>constructor</keyword>
+  <Square/>
+  <new/>
+  <symbol> ( </symbol>
+  <keyword>int</keyword>
+  <Ax/>
+  <symbol> , </symbol>
+  <keyword>int</keyword>
+  <Ay/>
+  <symbol> , </symbol>
+  <keyword>int</keyword>
+  <Asize/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>let</keyword>
+  <x/>
+  <symbol> = </symbol>
+  <Ax/>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <y/>
+  <symbol> = </symbol>
+  <Ay/>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <size/>
+  <symbol> = </symbol>
+  <Asize/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <draw/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>return</keyword>
+  <x/>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <dispose/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Memory/>
+  <symbol> . </symbol>
+  <deAlloc/>
+  <symbol> ( </symbol>
+  <keyword>this</keyword>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <draw/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <erase/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <incSize/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>if</keyword>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <erase/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <size/>
+  <symbol> = </symbol>
+  <size/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <draw/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <decSize/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>if</keyword>
+  <symbol> ( </symbol>
+  <size/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <erase/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <size/>
+  <symbol> = </symbol>
+  <size/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <draw/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <moveUp/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>if</keyword>
+  <symbol> ( </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <y/>
+  <symbol> = </symbol>
+  <y/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <moveDown/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>if</keyword>
+  <symbol> ( </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <y/>
+  <symbol> = </symbol>
+  <y/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <moveLeft/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>if</keyword>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <x/>
+  <symbol> = </symbol>
+  <x/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>method</keyword>
+  <keyword>void</keyword>
+  <moveRight/>
+  <symbol> ( </symbol>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>if</keyword>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>let</keyword>
+  <x/>
+  <symbol> = </symbol>
+  <x/>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <setColor/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword>do</keyword>
+  <Screen/>
+  <symbol> . </symbol>
+  <drawRectangle/>
+  <symbol> ( </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> , </symbol>
+  <x/>
+  <symbol> , </symbol>
+  <y/>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword>return</keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <symbol> } </symbol>
+</tokens>

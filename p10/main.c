@@ -64,55 +64,136 @@ bool is_line_overflow(char* buf, FILE *jack_file) {
 
 void parse_file(FILE *jack_file) {
     xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "UserList");
+    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "tokens");
     xmlDocSetRootElement(doc, root_node);
-    xmlNodePtr user_node = xmlNewChild(root_node, NULL, BAD_CAST "User", NULL);
-    xmlNewProp(user_node, BAD_CAST "id", BAD_CAST "1");
-    xmlNewChild(user_node, NULL, BAD_CAST "Name", BAD_CAST "John Doe");
-    xmlNewChild(user_node, NULL, BAD_CAST "Role", BAD_CAST "Developer");
-    xmlSaveFormatFileEnc("users.xml", doc, "UTF-8", 1);
-    xmlFreeDoc(doc);
-    xmlCleanupParser();
+    // child to root /parent to other nodes xmlNodePtr user_node = xmlNewChild(root_node, NULL, BAD_CAST "User", NULL);
+    // just a child xmlNewChild(user_node, NULL, BAD_CAST "Name", BAD_CAST "John Doe");
+
     //strchr("{}()[].,;+-*/&|<>=~", c) != NULL;
-    char current_instr[2048];
-    int i;
+    char current_instr[2048] = {0};
+    int i = 0;
     int c;
     bool is_single_line_comment = false;
     bool is_multi_line_comment = false;
-    // use ungetc?
     while ((c = fgetc(jack_file)) != EOF) {
-        if (is_multi_line_comment && c == '*') {
-            int next = fgetc(jack_file);
-            if (next == '/') {
-                is_multi_line_comment = false;
-                continue;
-            } else {
-                ungetc(next, jack_file);
-                continue;
-            }
-        }
-        if (is_single_line_comment) {
-            if (c == '\n') {
-                is_single_line_comment = false;
+        if (c == '\n') {
+            is_single_line_comment = false;
+            if (i > 0) {
+                Node *node = get_node(current_instr);
+                if (node != NULL) {
+                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                } else {
+                    xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                }
+                current_instr[0] = '\0';
+                i = 0;
             }
             continue;
+        }  else {
+            if (is_single_line_comment) {
+                continue;
+            }
         }
+        if (is_multi_line_comment) {
+            if (c == '*') {
+                int next = fgetc(jack_file);
+                if (next == '/') {
+                    is_multi_line_comment = false;
+                    continue;
+                } else {
+                    ungetc(next, jack_file);
+                    continue;
+                }
+            } else {
+                continue;
+            }
+        }
+
         if (c == '/') {
             int next = fgetc(jack_file);
             if (next == '/') {
                 is_single_line_comment = true;
-                // TODO: Process current_instr. Reset current_instr
+                // TODO: Evaluate current_instr reset
+                if (i > 0) {
+                    Node *node = get_node(current_instr);
+                    if (node != NULL) {
+                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                    } else {
+                        xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                    }
+                    current_instr[0] = '\0';
+                    i = 0;
+                }
                 continue;
             } else if (next == '*') {
                 is_multi_line_comment = true;
-                // TODO: Process current_isntr. Reset current_instr;
+                // TODO: Evaluate current_instr reset
+                if (i > 0) {
+                    Node *node = get_node(current_instr);
+                    if (node != NULL) {
+                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                    } else {
+                        xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                    }
+                    current_instr[0] = '\0';
+                    i = 0;
+                }
                 continue;
             } else {
                 ungetc(next, jack_file);
-                // TODO: c = division. Handle it
+                if (i > 0) {
+                    xmlNewChild(root_node, NULL, BAD_CAST "symbol", " / ");
+                    current_instr[0] = '\0';
+                    i = 0;
+                }
+                continue;
             }
         }
+        if (isspace(c)) {
+            // TODO: Evaluate current_instr reset
+            if (i > 0) {
+                Node *node = get_node(current_instr);
+                if (node != NULL) {
+                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                } else {
+                    xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                }
+                current_instr[0] = '\0';
+                i = 0;
+            }
+            continue;
+        }
+
+        if (strchr("{}()[].,;+-*/&|<>=~", c) != NULL) {
+            if (i > 0) {
+                // TODO: Evaluate current_isntr reset
+                Node *node = get_node(current_instr);
+                if (node != NULL) {
+                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                } else {
+                    xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                }
+                current_instr[0] = '\0';
+                i = 0;
+            }
+            // TODO: Add the value 
+            char sym[4];
+            sym[0] = ' ';
+            sym[1] = (char)c;
+            sym[2] = ' ';
+            sym[3] = '\0';
+            xmlNewChild(root_node, NULL, BAD_CAST "symbol", sym);
+            continue;
+        }
+
+        current_instr[i] = c;
+        current_instr[i+1] = '\0';
+        i++;
     }
+
+    xmlSaveFormatFileEnc("test.xml", doc, "UTF-8", 1);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
 
 }
 
