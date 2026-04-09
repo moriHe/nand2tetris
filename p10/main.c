@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlsave.h>
 
 #define HASH_SIZE 101
 
@@ -71,6 +72,7 @@ void parse_file(FILE *jack_file) {
 
     //strchr("{}()[].,;+-*/&|<>=~", c) != NULL;
     char current_instr[2048] = {0};
+    char tmp[2050] = {0};
     int i = 0;
     int c;
     bool is_single_line_comment = false;
@@ -80,10 +82,11 @@ void parse_file(FILE *jack_file) {
             is_single_line_comment = false;
             if (i > 0) {
                 Node *node = get_node(current_instr);
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
                 if (node != NULL) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                 } else {
-                    xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                    xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
                 }
                 current_instr[0] = '\0';
                 i = 0;
@@ -116,10 +119,11 @@ void parse_file(FILE *jack_file) {
                 // TODO: Evaluate current_instr reset
                 if (i > 0) {
                     Node *node = get_node(current_instr);
+                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
                     if (node != NULL) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                     } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
                     }
                     current_instr[0] = '\0';
                     i = 0;
@@ -130,10 +134,11 @@ void parse_file(FILE *jack_file) {
                 // TODO: Evaluate current_instr reset
                 if (i > 0) {
                     Node *node = get_node(current_instr);
+                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
                     if (node != NULL) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                     } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
                     }
                     current_instr[0] = '\0';
                     i = 0;
@@ -153,10 +158,11 @@ void parse_file(FILE *jack_file) {
             // TODO: Evaluate current_instr reset
             if (i > 0) {
                 Node *node = get_node(current_instr);
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
                 if (node != NULL) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                 } else {
-                    xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                    xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
                 }
                 current_instr[0] = '\0';
                 i = 0;
@@ -168,10 +174,11 @@ void parse_file(FILE *jack_file) {
             if (i > 0) {
                 // TODO: Evaluate current_isntr reset
                 Node *node = get_node(current_instr);
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
                 if (node != NULL) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", current_instr);
+                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                 } else {
-                    xmlNewChild(root_node, NULL, BAD_CAST strdup(current_instr), NULL);
+                    xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
                 }
                 current_instr[0] = '\0';
                 i = 0;
@@ -191,7 +198,11 @@ void parse_file(FILE *jack_file) {
         i++;
     }
 
-    xmlSaveFormatFileEnc("test.xml", doc, "UTF-8", 1);
+    xmlSaveCtxtPtr ctxt = xmlSaveToFilename("test.xml", NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT);
+    if (ctxt) {
+        xmlSaveDoc(ctxt, doc);
+        xmlSaveClose(ctxt);
+    }
     xmlFreeDoc(doc);
     xmlCleanupParser();
 

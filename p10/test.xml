@@ -1,449 +1,448 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <tokens>
-  <keyword>class</keyword>
-  <Square/>
+  <keyword> class </keyword>
+  <identifier> Square </identifier>
   <symbol> { </symbol>
-  <keyword>field</keyword>
-  <keyword>int</keyword>
-  <x/>
+  <keyword> field </keyword>
+  <keyword> int </keyword>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ; </symbol>
-  <keyword>field</keyword>
-  <keyword>int</keyword>
-  <size/>
+  <keyword> field </keyword>
+  <keyword> int </keyword>
+  <identifier> size </identifier>
   <symbol> ; </symbol>
-  <keyword>constructor</keyword>
-  <Square/>
-  <new/>
+  <keyword> constructor </keyword>
+  <identifier> Square </identifier>
+  <identifier> new </identifier>
   <symbol> ( </symbol>
-  <keyword>int</keyword>
-  <Ax/>
+  <keyword> int </keyword>
+  <identifier> Ax </identifier>
   <symbol> , </symbol>
-  <keyword>int</keyword>
-  <Ay/>
+  <keyword> int </keyword>
+  <identifier> Ay </identifier>
   <symbol> , </symbol>
-  <keyword>int</keyword>
-  <Asize/>
+  <keyword> int </keyword>
+  <identifier> Asize </identifier>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>let</keyword>
-  <x/>
+  <keyword> let </keyword>
+  <identifier> x </identifier>
   <symbol> = </symbol>
-  <Ax/>
+  <identifier> Ax </identifier>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <y/>
+  <keyword> let </keyword>
+  <identifier> y </identifier>
   <symbol> = </symbol>
-  <Ay/>
+  <identifier> Ay </identifier>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <size/>
+  <keyword> let </keyword>
+  <identifier> size </identifier>
   <symbol> = </symbol>
-  <Asize/>
+  <identifier> Asize </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <draw/>
+  <keyword> do </keyword>
+  <identifier> draw </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>return</keyword>
-  <x/>
-  <symbol> ; </symbol>
-  <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <dispose/>
-  <symbol> ( </symbol>
-  <symbol> ) </symbol>
-  <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Memory/>
-  <symbol> . </symbol>
-  <deAlloc/>
-  <symbol> ( </symbol>
-  <keyword>this</keyword>
-  <symbol> ) </symbol>
-  <symbol> ; </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
+  <identifier> x </identifier>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <draw/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> dispose </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Memory </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> deAlloc </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <keyword> this </keyword>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
-  <symbol> . </symbol>
-  <drawRectangle/>
-  <symbol> ( </symbol>
-  <x/>
-  <symbol> , </symbol>
-  <y/>
-  <symbol> , </symbol>
-  <x/>
-  <symbol> , </symbol>
-  <y/>
-  <symbol> ) </symbol>
-  <symbol> ; </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <erase/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> draw </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <incSize/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> erase </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>if</keyword>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
+  <symbol> . </symbol>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
+  <symbol> . </symbol>
+  <identifier> drawRectangle </identifier>
+  <symbol> ( </symbol>
+  <identifier> x </identifier>
+  <symbol> , </symbol>
+  <identifier> y </identifier>
+  <symbol> , </symbol>
+  <identifier> x </identifier>
+  <symbol> , </symbol>
+  <identifier> y </identifier>
+  <symbol> ) </symbol>
+  <symbol> ; </symbol>
+  <keyword> return </keyword>
+  <symbol> ; </symbol>
+  <symbol> } </symbol>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> incSize </identifier>
+  <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <erase/>
+  <keyword> if </keyword>
+  <symbol> ( </symbol>
+  <identifier> x </identifier>
+  <symbol> ) </symbol>
+  <symbol> { </symbol>
+  <keyword> do </keyword>
+  <identifier> erase </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <size/>
+  <keyword> let </keyword>
+  <identifier> size </identifier>
   <symbol> = </symbol>
-  <size/>
+  <identifier> size </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <draw/>
+  <keyword> do </keyword>
+  <identifier> draw </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <decSize/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> decSize </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>if</keyword>
+  <keyword> if </keyword>
   <symbol> ( </symbol>
-  <size/>
+  <identifier> size </identifier>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <erase/>
+  <keyword> do </keyword>
+  <identifier> erase </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <size/>
+  <keyword> let </keyword>
+  <identifier> size </identifier>
   <symbol> = </symbol>
-  <size/>
+  <identifier> size </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <draw/>
+  <keyword> do </keyword>
+  <identifier> draw </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <moveUp/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> moveUp </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>if</keyword>
+  <keyword> if </keyword>
   <symbol> ( </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <y/>
+  <keyword> let </keyword>
+  <identifier> y </identifier>
   <symbol> = </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <moveDown/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> moveDown </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>if</keyword>
+  <keyword> if </keyword>
   <symbol> ( </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <y/>
+  <keyword> let </keyword>
+  <identifier> y </identifier>
   <symbol> = </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <moveLeft/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> moveLeft </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>if</keyword>
+  <keyword> if </keyword>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <x/>
+  <keyword> let </keyword>
+  <identifier> x </identifier>
   <symbol> = </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>method</keyword>
-  <keyword>void</keyword>
-  <moveRight/>
+  <keyword> method </keyword>
+  <keyword> void </keyword>
+  <identifier> moveRight </identifier>
   <symbol> ( </symbol>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>if</keyword>
+  <keyword> if </keyword>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> { </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>let</keyword>
-  <x/>
+  <keyword> let </keyword>
+  <identifier> x </identifier>
   <symbol> = </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <setColor/>
+  <identifier> setColor </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
-  <keyword>do</keyword>
-  <Screen/>
+  <keyword> do </keyword>
+  <identifier> Screen </identifier>
   <symbol> . </symbol>
-  <drawRectangle/>
+  <identifier> drawRectangle </identifier>
   <symbol> ( </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> , </symbol>
-  <x/>
+  <identifier> x </identifier>
   <symbol> , </symbol>
-  <y/>
+  <identifier> y </identifier>
   <symbol> ) </symbol>
   <symbol> ; </symbol>
   <symbol> } </symbol>
-  <keyword>return</keyword>
+  <keyword> return </keyword>
   <symbol> ; </symbol>
   <symbol> } </symbol>
   <symbol> } </symbol>
