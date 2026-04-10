@@ -79,7 +79,23 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
     int c;
     bool is_single_line_comment = false;
     bool is_multi_line_comment = false;
+    bool is_string = false;
     while ((c = fgetc(jack_file)) != EOF) {
+        if (is_string) {
+            if (c == '"') {
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                xmlNewChild(root_node, NULL, BAD_CAST "stringConstant", BAD_CAST tmp);
+                current_instr[0] = '\0';
+                i = 0;
+                is_string = false;
+            } else {
+                current_instr[i] = c;
+                current_instr[i+1] = '\0';
+                i++;
+            }
+
+            continue;
+        }
         if (c == '\n') {
             is_single_line_comment = false;
             if (i > 0) {
@@ -112,6 +128,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
             } else {
                 continue;
             }
+        }
+
+        if (c == '"') {
+            is_string = true;
+            continue;
         }
 
         if (c == '/') {
@@ -147,12 +168,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 }
                 continue;
             } else {
+                printf("no?\n");
                 ungetc(next, jack_file);
-                if (i > 0) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "symbol", " / ");
-                    current_instr[0] = '\0';
-                    i = 0;
-                }
+                xmlNewChild(root_node, NULL, BAD_CAST "symbol", " / ");
+                current_instr[0] = '\0';
+                i = 0;
                 continue;
             }
         }
