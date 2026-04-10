@@ -6,6 +6,8 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlsave.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #define HASH_SIZE 101
 
@@ -63,7 +65,7 @@ bool is_line_overflow(char* buf, FILE *jack_file) {
     return false;
 }
 
-void parse_file(FILE *jack_file) {
+void parse_file(FILE *jack_file, char* xml_t_ident) {
     xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
     xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "tokens");
     xmlDocSetRootElement(doc, root_node);
@@ -198,7 +200,7 @@ void parse_file(FILE *jack_file) {
         i++;
     }
 
-    xmlSaveCtxtPtr ctxt = xmlSaveToFilename("test.xml", NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT);
+    xmlSaveCtxtPtr ctxt = xmlSaveToFilename(xml_t_ident, NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT);
     if (ctxt) {
         xmlSaveDoc(ctxt, doc);
         xmlSaveClose(ctxt);
@@ -208,18 +210,60 @@ void parse_file(FILE *jack_file) {
 
 }
 
+void process_file(char* argv) {
+    FILE *jack_file = fopen(strdup(argv), "r");
+    char *filename_identifier = strrchr(strdup(argv), '/');
+    // If null, the arg is probably Basic.vm instead of ./Basic.vm. filename_identifier points to /. So we only need to advance if present.
+    if (filename_identifier != NULL) {
+        filename_identifier++;
+    } else {
+        filename_identifier = strdup(argv);
+    }
+    char *dot = strrchr(filename_identifier, '.');
+    if (dot && (strcmp(dot, ".jack") == 0)) {
+        *dot = '\0';
+    } else {
+        return;
+    }
+    char xml_t_ident[strlen(filename_identifier) + 6];
+    snprintf(xml_t_ident, sizeof(xml_t_ident), "%sT.xml", filename_identifier);
+    if (jack_file == NULL) {
+        return;
+    }
+    parse_file(jack_file, xml_t_ident);
+
+}
+
 int main(int argc, char *argv[]) {
     for (int i = 0; i < num_keywords; i++) {
         insert_node(keywords[i]);
     }
 
-    // TODO: Implement dir / single file argv. For now assuming it s a jack file
-    FILE *jack_file = fopen(argv[1], "r");
-    if (jack_file == NULL) {
-        fprintf(stderr, "Error: Could not open file");
+    int status;
+    struct stat st_buf;
+    const char *iptr = argv[1];
+    status = stat(iptr, &st_buf);
+    if (status != 0) {
+        fprintf(stderr, "Error: Wrong status");
         return 1;
     }
 
-    parse_file(jack_file);
+    if (S_ISDIR(st_buf.st_mode)) {
+        DIR *dir = opendir(argv[1]);
+        if (dir == NULL) {
+            return 1;
+        }
+
+        struct dirent *entry;
+
+        while ((entry = readdir(dir)) != NULL) {
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s/%s", argv[1], entry->d_name);
+            process_file(full_path);
+        }
+    } else if (S_ISREG(st_buf.st_mode)) {
+        process_file(argv[1]);
+    }
+
     return 0;
 }

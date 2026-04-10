@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     struct Parser parser = {NULL, {0}, C_NONE, -1, 0, NULL};
-        FILE *optr = NULL;
+    FILE *optr = NULL;
     if (S_ISDIR(st_buf.st_mode)) {
         printf("%s is a directory.\n", iptr);
         DIR *dir;
