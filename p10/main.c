@@ -11,6 +11,15 @@
 
 #define HASH_SIZE 101
 
+bool is_int(const char *str) {
+    char *endptr;
+    if (*str == '\0') {
+        return false;
+    }
+    strtol(str, &endptr, 10);
+    return *endptr == '\0';
+}
+
 typedef struct Node {
     char *key;
     struct Node *next;
@@ -104,7 +113,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 if (node != NULL) {
                     xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                 } else {
-                    xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                    if (is_int(current_instr)) {
+                        xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
+                    } else {
+                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                    }
                 }
                 current_instr[0] = '\0';
                 i = 0;
@@ -146,7 +159,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                     if (node != NULL) {
                         xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                     } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                        if (is_int(current_instr)) {
+                            xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
+                        } else {
+                            xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                        }
                     }
                     current_instr[0] = '\0';
                     i = 0;
@@ -161,7 +178,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                     if (node != NULL) {
                         xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                     } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                        if (is_int(current_instr)) {
+                            xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
+                        } else {
+                            xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                        }
                     }
                     current_instr[0] = '\0';
                     i = 0;
@@ -184,7 +205,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 if (node != NULL) {
                     xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                 } else {
-                    xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                    if (is_int(current_instr)) {
+                        xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
+                    } else {
+                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                    }
                 }
                 current_instr[0] = '\0';
                 i = 0;
@@ -200,7 +225,11 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 if (node != NULL) {
                     xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
                 } else {
-                    xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                    if (is_int(current_instr)) {
+                        xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
+                    } else {
+                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
+                    }
                 }
                 current_instr[0] = '\0';
                 i = 0;
