@@ -107,19 +107,6 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
         }
         if (c == '\n') {
             is_single_line_comment = false;
-            if (i > 0) {
-                Node *node = get_node(current_instr);
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
-                if (node != NULL) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
-                } else {
-                    if (is_int(current_instr)) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
-                    } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
-                    }
-                }
-            }
             current_instr[0] = '\0';
             i = 0;
             continue;
