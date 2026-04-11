@@ -119,9 +119,9 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                         xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
                     }
                 }
-                current_instr[0] = '\0';
-                i = 0;
             }
+            current_instr[0] = '\0';
+            i = 0;
             continue;
         }  else {
             if (is_single_line_comment) {
@@ -133,6 +133,8 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 int next = fgetc(jack_file);
                 if (next == '/') {
                     is_multi_line_comment = false;
+                    current_instr[0] = '\0';
+                    i = 0;
                     continue;
                 } else {
                     ungetc(next, jack_file);
@@ -189,7 +191,6 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 }
                 continue;
             } else {
-                printf("no?\n");
                 ungetc(next, jack_file);
                 xmlNewChild(root_node, NULL, BAD_CAST "symbol", " / ");
                 current_instr[0] = '\0';
@@ -234,13 +235,16 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
                 current_instr[0] = '\0';
                 i = 0;
             }
-            // TODO: Add the value 
-            char sym[4];
-            sym[0] = ' ';
-            sym[1] = (char)c;
-            sym[2] = ' ';
-            sym[3] = '\0';
-            xmlNewChild(root_node, NULL, BAD_CAST "symbol", sym);
+            if (c == '&') {
+                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST " &amp; ");
+            } else if (c == '<') {
+                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST " &lt; ");
+            } else if (c == '>') {
+                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST " &gt; ");
+            } else {
+                char sym[4] = {' ', (char)c, ' ', '\0'};
+                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST sym);
+            }
             continue;
         }
 
