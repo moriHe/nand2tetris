@@ -11,6 +11,11 @@
 
 #define HASH_SIZE 101
 
+typedef struct CurrentInstr {
+    char *type;
+    char *value;
+} CurrentInstr;
+
 bool is_int(const char *str) {
     char *endptr;
     if (*str == '\0') {
@@ -74,6 +79,237 @@ bool is_line_overflow(char* buf, FILE *jack_file) {
     return false;
 }
 
+void write_identifier_or_integer() {
+
+}
+
+CurrentInstr advance_parser(FILE *jack_file)
+{
+    CurrentInstr resp = {0};
+    char current_instr[2048] = {0};
+    char tmp[2050] = {0};
+    int i = 0;
+    int c;
+    bool is_single_line_comment = false;
+    bool is_multi_line_comment = false;
+    bool is_string = false;
+    while ((c = fgetc(jack_file)) != EOF)
+    {
+        if (is_string)
+        {
+            if (c == '"')
+            {
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                resp.type = "stringConstant";
+                resp.value = tmp;
+                return resp;
+            }
+            else
+            {
+                current_instr[i] = c;
+                current_instr[i + 1] = '\0';
+                i++;
+            }
+
+            continue;
+        }
+        if (c == '\n')
+        {
+            is_single_line_comment = false;
+            current_instr[0] = '\0';
+            i = 0;
+            continue;
+        }
+        else
+        {
+            if (is_single_line_comment)
+            {
+                continue;
+            }
+        }
+        if (is_multi_line_comment)
+        {
+            if (c == '*')
+            {
+                int next = fgetc(jack_file);
+                if (next == '/')
+                {
+                    is_multi_line_comment = false;
+                    current_instr[0] = '\0';
+                    i = 0;
+                    continue;
+                }
+                else
+                {
+                    ungetc(next, jack_file);
+                    continue;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if (c == '"')
+        {
+            is_string = true;
+            continue;
+        }
+
+        if (c == '/')
+        {
+            int next = fgetc(jack_file);
+            if (next == '/')
+            {
+                is_single_line_comment = true;
+                // TODO: Evaluate current_instr reset
+                if (i > 0)
+                {
+                    Node *node = get_node(current_instr);
+                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                    if (node != NULL)
+                    {
+                        resp.type = "keyword";
+                    }
+                    else
+                    {
+                        if (is_int(current_instr))
+                        {
+                            resp.type = "integerConstant";
+                        }
+                        else
+                        {
+                            resp.type = "identifier";
+                        }
+                    }
+                    ungetc(next, jack_file);
+                    ungetc(c, jack_file);
+                    resp.type = tmp;
+                    return resp;
+                }
+                continue;
+            }
+            else if (next == '*')
+            {
+                is_multi_line_comment = true;
+                // TODO: Evaluate current_instr reset
+                if (i > 0)
+                {
+                    Node *node = get_node(current_instr);
+                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                    if (node != NULL)
+                    {
+                        resp.type = "keyword";
+                    }
+                    else
+                    {
+                        if (is_int(current_instr))
+                        {
+                            resp.type = "integerConstant";
+                        }
+                        else
+                        {
+                            resp.type = "identifier";
+                        }
+                    }
+                    ungetc(next, jack_file);
+                    ungetc(c, jack_file);
+                    resp.value = tmp;
+                    return resp;
+                }
+                continue;
+            }
+            else
+            {
+                ungetc(next, jack_file);
+                resp.type = "symbol";
+                resp.value = " / ";
+                return resp;
+            }
+        }
+        if (isspace(c))
+        {
+            // TODO: Evaluate current_instr reset
+            if (i > 0)
+            {
+                Node *node = get_node(current_instr);
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                if (node != NULL)
+                {
+                    resp.type = "keyword";
+                }
+                else
+                {
+                    if (is_int(current_instr))
+                    {
+                        resp.type = "integerConstant";
+                    }
+                    else
+                    {
+                        resp.type = "identifier";
+                    }
+                }
+                resp.value = tmp;
+                return resp;
+            }
+            continue;
+        }
+
+        if (strchr("{}()[].,;+-*/&|<>=~", c) != NULL)
+        {
+            if (i > 0)
+            {
+                // TODO: Evaluate current_isntr reset
+                Node *node = get_node(current_instr);
+                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                if (node != NULL)
+                {
+                    resp.type = "keyword";
+                }
+                else
+                {
+                    if (is_int(current_instr))
+                    {
+                        resp.type = "integerConstant";
+                    }
+                    else
+                    {
+                        resp.type = "identifier";
+                    }
+                }
+                ungetc(c, jack_file);
+                resp.value = tmp;
+                return resp;
+            }
+            resp.type = "symbol";
+            if (c == '&')
+            {
+                resp.value = " &amp; ";
+            }
+            else if (c == '<')
+            {
+                resp.value = " &lt; ";
+            }
+            else if (c == '>')
+            {
+                resp.value = " &gt; ";
+            }
+            else
+            {
+                char symbol_str[4] = {' ', (char)c, ' ', '\0'};
+                resp.value = symbol_str;
+            }
+            return resp;
+        }
+
+        current_instr[i] = c;
+        current_instr[i + 1] = '\0';
+        i++;
+    }
+    return resp;
+}
+
 void parse_file(FILE *jack_file, char* xml_t_ident) {
     xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
     xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "tokens");
@@ -82,162 +318,13 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
     // just a child xmlNewChild(user_node, NULL, BAD_CAST "Name", BAD_CAST "John Doe");
 
     //strchr("{}()[].,;+-*/&|<>=~", c) != NULL;
-    char current_instr[2048] = {0};
-    char tmp[2050] = {0};
-    int i = 0;
-    int c;
-    bool is_single_line_comment = false;
-    bool is_multi_line_comment = false;
-    bool is_string = false;
-    while ((c = fgetc(jack_file)) != EOF) {
-        if (is_string) {
-            if (c == '"') {
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
-                xmlNewChild(root_node, NULL, BAD_CAST "stringConstant", BAD_CAST tmp);
-                current_instr[0] = '\0';
-                i = 0;
-                is_string = false;
-            } else {
-                current_instr[i] = c;
-                current_instr[i+1] = '\0';
-                i++;
-            }
-
-            continue;
-        }
-        if (c == '\n') {
-            is_single_line_comment = false;
-            current_instr[0] = '\0';
-            i = 0;
-            continue;
-        }  else {
-            if (is_single_line_comment) {
-                continue;
-            }
-        }
-        if (is_multi_line_comment) {
-            if (c == '*') {
-                int next = fgetc(jack_file);
-                if (next == '/') {
-                    is_multi_line_comment = false;
-                    current_instr[0] = '\0';
-                    i = 0;
-                    continue;
-                } else {
-                    ungetc(next, jack_file);
-                    continue;
-                }
-            } else {
-                continue;
-            }
-        }
-
-        if (c == '"') {
-            is_string = true;
-            continue;
-        }
-
-        if (c == '/') {
-            int next = fgetc(jack_file);
-            if (next == '/') {
-                is_single_line_comment = true;
-                // TODO: Evaluate current_instr reset
-                if (i > 0) {
-                    Node *node = get_node(current_instr);
-                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
-                    if (node != NULL) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
-                    } else {
-                        if (is_int(current_instr)) {
-                            xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
-                        } else {
-                            xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
-                        }
-                    }
-                    current_instr[0] = '\0';
-                    i = 0;
-                }
-                continue;
-            } else if (next == '*') {
-                is_multi_line_comment = true;
-                // TODO: Evaluate current_instr reset
-                if (i > 0) {
-                    Node *node = get_node(current_instr);
-                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
-                    if (node != NULL) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
-                    } else {
-                        if (is_int(current_instr)) {
-                            xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
-                        } else {
-                            xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
-                        }
-                    }
-                    current_instr[0] = '\0';
-                    i = 0;
-                }
-                continue;
-            } else {
-                ungetc(next, jack_file);
-                xmlNewChild(root_node, NULL, BAD_CAST "symbol", " / ");
-                current_instr[0] = '\0';
-                i = 0;
-                continue;
-            }
-        }
-        if (isspace(c)) {
-            // TODO: Evaluate current_instr reset
-            if (i > 0) {
-                Node *node = get_node(current_instr);
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
-                if (node != NULL) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
-                } else {
-                    if (is_int(current_instr)) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
-                    } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
-                    }
-                }
-                current_instr[0] = '\0';
-                i = 0;
-            }
-            continue;
-        }
-
-        if (strchr("{}()[].,;+-*/&|<>=~", c) != NULL) {
-            if (i > 0) {
-                // TODO: Evaluate current_isntr reset
-                Node *node = get_node(current_instr);
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
-                if (node != NULL) {
-                    xmlNewChild(root_node, NULL, BAD_CAST "keyword", BAD_CAST tmp);
-                } else {
-                    if (is_int(current_instr)) {
-                        xmlNewChild(root_node, NULL, BAD_CAST "integerConstant", BAD_CAST tmp);
-                    } else {
-                        xmlNewChild(root_node, NULL, BAD_CAST "identifier", BAD_CAST tmp);
-                    }
-                }
-                current_instr[0] = '\0';
-                i = 0;
-            }
-            if (c == '&') {
-                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST " &amp; ");
-            } else if (c == '<') {
-                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST " &lt; ");
-            } else if (c == '>') {
-                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST " &gt; ");
-            } else {
-                char sym[4] = {' ', (char)c, ' ', '\0'};
-                xmlNewChild(root_node, NULL, BAD_CAST "symbol", BAD_CAST sym);
-            }
-            continue;
-        }
-
-        current_instr[i] = c;
-        current_instr[i+1] = '\0';
-        i++;
+    bool has_tokens = true;
+    while (has_tokens) {
+        CurrentInstr current_instr = advance_parser(jack_file);
+        if (current_instr.type != NULL)
+            xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        else 
+            has_tokens = false;
     }
 
     xmlSaveCtxtPtr ctxt = xmlSaveToFilename(xml_t_ident, NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT);
@@ -250,7 +337,8 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
 
 }
 
-void process_file(char* argv) {
+void process_file(char *argv)
+{
     FILE *jack_file = fopen(strdup(argv), "r");
     char *filename_identifier = strrchr(strdup(argv), '/');
     // If null, the arg is probably Basic.vm instead of ./Basic.vm. filename_identifier points to /. So we only need to advance if present.
@@ -271,7 +359,6 @@ void process_file(char* argv) {
         return;
     }
     parse_file(jack_file, xml_t_ident);
-
 }
 
 int main(int argc, char *argv[]) {
