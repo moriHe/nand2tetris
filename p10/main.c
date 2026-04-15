@@ -101,7 +101,7 @@ CurrentInstr advance_parser(FILE *jack_file)
             {
                 snprintf(tmp, sizeof(tmp), " %s ", current_instr);
                 resp.type = "stringConstant";
-                resp.value = tmp;
+                resp.value = strdup(tmp);
                 return resp;
             }
             else
@@ -185,7 +185,7 @@ CurrentInstr advance_parser(FILE *jack_file)
                     }
                     ungetc(next, jack_file);
                     ungetc(c, jack_file);
-                    resp.type = tmp;
+                    resp.value = strdup(tmp);
                     return resp;
                 }
                 continue;
@@ -215,7 +215,7 @@ CurrentInstr advance_parser(FILE *jack_file)
                     }
                     ungetc(next, jack_file);
                     ungetc(c, jack_file);
-                    resp.value = tmp;
+                    resp.value = strdup(tmp);
                     return resp;
                 }
                 continue;
@@ -250,7 +250,7 @@ CurrentInstr advance_parser(FILE *jack_file)
                         resp.type = "identifier";
                     }
                 }
-                resp.value = tmp;
+                resp.value = strdup(tmp);
                 return resp;
             }
             continue;
@@ -279,7 +279,7 @@ CurrentInstr advance_parser(FILE *jack_file)
                     }
                 }
                 ungetc(c, jack_file);
-                resp.value = tmp;
+                resp.value = strdup(tmp);
                 return resp;
             }
             resp.type = "symbol";
@@ -298,7 +298,7 @@ CurrentInstr advance_parser(FILE *jack_file)
             else
             {
                 char symbol_str[4] = {' ', (char)c, ' ', '\0'};
-                resp.value = symbol_str;
+                resp.value = strdup(symbol_str);
             }
             return resp;
         }
@@ -310,14 +310,55 @@ CurrentInstr advance_parser(FILE *jack_file)
     return resp;
 }
 
+void compile_class(char *next_type, char *next_value, FILE *jack_file, xmlNodePtr node) {
+    CurrentInstr current_instr = advance_parser(jack_file);
+    printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
+    if (current_instr.type == NULL || current_instr.value == NULL) {
+        return;
+    }
+    char *current_type = strdup(current_instr.type);
+    char *current_value = strdup(current_instr.value);
+    if (strcmp(next_type, "identifier") == 0) {
+        if (strcmp(current_type, "identifier") != 0) {
+            return;
+        } else {
+            xmlNewChild(node, NULL, BAD_CAST current_type, BAD_CAST current_value);
+            compile_class("symbol", "{", jack_file, node);
+        }
+    } else if (strcmp(next_value, "{") == 0) {
+        if (strcmp(current_value, " { ") != 0) {
+            printf("trest\n");
+            return;
+        } else {
+            printf("type=%s, val=%s\n", current_type, current_value);
+
+            xmlNewChild(node, NULL, BAD_CAST current_type, BAD_CAST current_value);
+            // TODO: Loop compile_class_var_dec (static und field variables)
+        }
+
+    }
+
+    return;
+}
+
 void parse_file(FILE *jack_file, char* xml_t_ident) {
     xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "tokens");
+    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "class");
+    if (root_node == NULL) {
+        fprintf(stderr, "Failed to create class_node\n");
+        return;
+    }
     xmlDocSetRootElement(doc, root_node);
-    // child to root /parent to other nodes xmlNodePtr user_node = xmlNewChild(root_node, NULL, BAD_CAST "User", NULL);
-    // just a child xmlNewChild(user_node, NULL, BAD_CAST "Name", BAD_CAST "John Doe");
 
-    //strchr("{}()[].,;+-*/&|<>=~", c) != NULL;
+    CurrentInstr current_instr = advance_parser(jack_file);
+    if (strcmp(current_instr.value, " class ") == 0) {
+        xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        compile_class("identifier", NULL, jack_file, root_node);
+    } else {
+        fprintf(stderr, "Error: File does not start with class keyword");
+    }
+
+    /*
     bool has_tokens = true;
     while (has_tokens) {
         CurrentInstr current_instr = advance_parser(jack_file);
@@ -326,6 +367,7 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
         else 
             has_tokens = false;
     }
+    */
 
     xmlSaveCtxtPtr ctxt = xmlSaveToFilename(xml_t_ident, NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT);
     if (ctxt) {
@@ -333,7 +375,6 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
         xmlSaveClose(ctxt);
     }
     xmlFreeDoc(doc);
-    xmlCleanupParser();
 
 }
 
@@ -391,6 +432,7 @@ int main(int argc, char *argv[]) {
     } else if (S_ISREG(st_buf.st_mode)) {
         process_file(argv[1]);
     }
+    xmlCleanupParser();
 
     return 0;
 }
