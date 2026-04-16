@@ -310,34 +310,74 @@ CurrentInstr advance_parser(FILE *jack_file)
     return resp;
 }
 
-void compile_class(char *next_type, char *next_value, FILE *jack_file, xmlNodePtr node) {
+void compile_class_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
+        xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST NULL);
+        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+        current_instr = advance_parser(jack_file);
+        if (
+        strcmp(current_instr.type, "identifier") != 0 
+        && strcmp(current_instr.value, " boolean ") != 0 
+        && strcmp(current_instr.value, " int ") != 0 
+        && strcmp(current_instr.value, " char ") != 0
+        ) {
+            fprintf(stderr, "Error: Field or static variable not followed by correct type");
+            return;
+        }
+
+        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+
+
+}
+
+void compile_class(FILE *jack_file, xmlNodePtr node) {
+    // Check for class keyword
     CurrentInstr current_instr = advance_parser(jack_file);
-    printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
-    if (current_instr.type == NULL || current_instr.value == NULL) {
+    if (strcmp(current_instr.value, " class ") == 0) {
+        xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+    } else {
+        fprintf(stderr, "Error: File does not start with class keyword");
         return;
     }
-    char *current_type = strdup(current_instr.type);
-    char *current_value = strdup(current_instr.value);
-    if (strcmp(next_type, "identifier") == 0) {
-        if (strcmp(current_type, "identifier") != 0) {
-            return;
-        } else {
-            xmlNewChild(node, NULL, BAD_CAST current_type, BAD_CAST current_value);
-            compile_class("symbol", "{", jack_file, node);
-        }
-    } else if (strcmp(next_value, "{") == 0) {
-        if (strcmp(current_value, " { ") != 0) {
-            printf("trest\n");
-            return;
-        } else {
-            printf("type=%s, val=%s\n", current_type, current_value);
 
-            xmlNewChild(node, NULL, BAD_CAST current_type, BAD_CAST current_value);
-            // TODO: Loop compile_class_var_dec (static und field variables)
-        }
-
+    // Check for class identifier
+    current_instr = advance_parser(jack_file);
+    if (strcmp(current_instr.type, "identifier") != 0) {
+        fprintf(stderr, "Error: No follow up identifier");
+        return;
+    } else {
+        xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+    }
+    
+    // Check for opening bracket
+    current_instr = advance_parser(jack_file);
+    if (strcmp(current_instr.value, " { ") != 0) {
+        fprintf(stderr, "Error: No opening bracket");
+        return;
+    } else {
+        xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     }
 
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.value, " static ") == 0 || strcmp(current_instr.value, " field ") == 0) {
+
+        compile_class_var_dec(jack_file, node, current_instr);
+        current_instr = advance_parser(jack_file);
+    }
+
+    // TODOs: 
+    // compile_class_var_dec (field int x, y; static int x, y;)
+    // compile_subroutine (declarations of methods, functions and constructors)
+    // compile_parameter_list (stuff inside parantheses of method signatures)
+    
+    // compile_var_dec
+    // compile_statements
+        // compile_let, compile_if, compile_while, compile_do, compile_return
+
+    // compile_expression (identifies a term and any subsquent operators)
+    // compile_term (constants, vairables and array indexing)
+    // compile_expression_list
     return;
 }
 
@@ -349,14 +389,7 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
         return;
     }
     xmlDocSetRootElement(doc, root_node);
-
-    CurrentInstr current_instr = advance_parser(jack_file);
-    if (strcmp(current_instr.value, " class ") == 0) {
-        xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        compile_class("identifier", NULL, jack_file, root_node);
-    } else {
-        fprintf(stderr, "Error: File does not start with class keyword");
-    }
+    compile_class(jack_file, root_node);
 
     /*
     bool has_tokens = true;
@@ -394,8 +427,8 @@ void process_file(char *argv)
     } else {
         return;
     }
-    char xml_t_ident[strlen(filename_identifier) + 6];
-    snprintf(xml_t_ident, sizeof(xml_t_ident), "%sT.xml", filename_identifier);
+    char xml_t_ident[strlen(filename_identifier) + 5];
+    snprintf(xml_t_ident, sizeof(xml_t_ident), "%s.xml", filename_identifier);
     if (jack_file == NULL) {
         return;
     }
