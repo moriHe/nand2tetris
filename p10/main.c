@@ -310,9 +310,47 @@ CurrentInstr advance_parser(FILE *jack_file)
     return resp;
 }
 
+// TODO: field / static uses almost the same code. Can be united
+void compile_parameter_list(FILE *jack_file, xmlNodePtr node, CurrentInstr current_instr) {
+    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+    xmlNodePtr param_list_node = xmlNewChild(node, NULL, BAD_CAST "parameterList", BAD_CAST "");
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.value, " ) ") != 0) {
+        if (
+        strcmp(current_instr.type, "identifier") != 0 
+        && strcmp(current_instr.value, " boolean ") != 0 
+        && strcmp(current_instr.value, " int ") != 0 
+        && strcmp(current_instr.value, " char ") != 0
+        ) {
+            fprintf(stderr, "Error: Parameter List not followed by correct type\n");
+            return;
+        }
+        xmlNewChild(param_list_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+        current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.type, "identifier") != 0) {
+            fprintf(stderr, "Error: Parm List no identifier after type.\n");
+            return;
+        }
+        xmlNewChild(param_list_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+        current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.value, " , ") == 0) {
+            xmlNewChild(param_list_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+            current_instr = advance_parser(jack_file);
+        }
+    }
+
+    if (strcmp(current_instr.value, " ) ") != 0) {
+        fprintf(stderr, "Error: Param List not closed\n");
+        return;
+    }
+
+    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+}
+
 void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
         char *subr_val = current_instr.value;
-        xmlNodePtr subr_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST NULL);
+        xmlNodePtr subr_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST "");
         xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
 
         current_instr = advance_parser(jack_file);
@@ -344,12 +382,12 @@ void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr 
             return;
         }
 
-        
+        compile_parameter_list(jack_file, subr_node, current_instr);
 
 }
 
 void compile_class_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
-        xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST NULL);
+        xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST "");
         xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
 
         current_instr = advance_parser(jack_file);
@@ -423,9 +461,14 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
         current_instr = advance_parser(jack_file);
     }
 
+    // Done:
+    // compile_class (kinda. I mean all other methods descent from class)
+    // compile_class_var_dec
+    // compile_subroutine
+    // compile_parameter_list
+
     // TODOs: 
-    // compile_subroutine (declarations of methods, functions and constructors)
-    // compile_parameter_list (stuff inside parantheses of method signatures)
+    // compile subroutineBody
     
     // compile_var_dec
     // compile_statements
@@ -458,7 +501,7 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
     }
     */
 
-    xmlSaveCtxtPtr ctxt = xmlSaveToFilename(xml_t_ident, NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT);
+    xmlSaveCtxtPtr ctxt = xmlSaveToFilename(xml_t_ident, NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT | XML_SAVE_NO_EMPTY);
     if (ctxt) {
         xmlSaveDoc(ctxt, doc);
         xmlSaveClose(ctxt);
