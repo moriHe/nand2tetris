@@ -10,7 +10,7 @@
 #include <dirent.h>
 
 #define HASH_SIZE 101
-
+// TODO: free CurrentInstr when used
 typedef struct CurrentInstr {
     char *type;
     char *value;
@@ -310,6 +310,44 @@ CurrentInstr advance_parser(FILE *jack_file)
     return resp;
 }
 
+void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
+        char *subr_val = current_instr.value;
+        xmlNodePtr subr_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST NULL);
+        xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+        current_instr = advance_parser(jack_file);
+        if (strcmp(subr_val, " function ") == 0 || strcmp(subr_val, " method ") == 0) {
+            if (strcmp(current_instr.type, "keyword") != 0) {
+                fprintf(stderr, "Error: Missing keyword after fn or method.\n");
+                return;
+            }
+            xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+            current_instr = advance_parser(jack_file);
+
+        }
+
+        if (strcmp(current_instr.type, "identifier") != 0) {
+            printf("val=%s\n", current_instr.value);
+            fprintf(stderr, "Error: Missing identifier in subroutine declaration.\n");
+            return;
+        }
+        xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+        current_instr = advance_parser(jack_file);
+        if (strcmp(subr_val, " constructor ") == 0) {
+            xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+            current_instr = advance_parser(jack_file);
+        }
+
+        if (strcmp(current_instr.value, " ( ") != 0) {
+            fprintf(stderr, "Error: Missing opening paranthesis in subroutine decl.\n");
+            return;
+        }
+
+        
+
+}
+
 void compile_class_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
         xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST NULL);
         xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
@@ -380,8 +418,12 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
         current_instr = advance_parser(jack_file);
     }
 
+    while (strcmp(current_instr.value, " constructor ") == 0 ||strcmp(current_instr.value, " method ") == 0 || strcmp(current_instr.value, " function ") == 0) {
+        compile_subroutine_dec(jack_file, node, current_instr);
+        current_instr = advance_parser(jack_file);
+    }
+
     // TODOs: 
-    // compile_class_var_dec (field int x, y; static int x, y;)
     // compile_subroutine (declarations of methods, functions and constructors)
     // compile_parameter_list (stuff inside parantheses of method signatures)
     
