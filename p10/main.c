@@ -327,7 +327,21 @@ void compile_class_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr c
 
         xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
 
-
+        current_instr = advance_parser(jack_file);
+        while (strcmp(current_instr.type, "identifier") == 0) {
+            xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.type, "symbol") == 0) {
+                xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+ 
+            } else {
+                fprintf(stderr, "Error: missing symbol in field or static declaration.");
+                return;
+            }
+            if (strcmp(current_instr.value, " , ") == 0) {
+                current_instr = advance_parser(jack_file);
+            }
+        }
 
 }
 
