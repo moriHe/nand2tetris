@@ -310,6 +310,42 @@ CurrentInstr advance_parser(FILE *jack_file)
     return resp;
 }
 
+
+void compile_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr, char *root_node_identifier) {
+        xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST root_node_identifier, BAD_CAST "");
+        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+        current_instr = advance_parser(jack_file);
+        if (
+        strcmp(current_instr.type, "identifier") != 0 
+        && strcmp(current_instr.value, " boolean ") != 0 
+        && strcmp(current_instr.value, " int ") != 0 
+        && strcmp(current_instr.value, " char ") != 0
+        ) {
+            fprintf(stderr, "Error: Field or static variable not followed by correct type");
+            return;
+        }
+
+        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+        current_instr = advance_parser(jack_file);
+        while (strcmp(current_instr.type, "identifier") == 0) {
+            xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.type, "symbol") == 0) {
+                xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+ 
+            } else {
+                fprintf(stderr, "Error: missing symbol in field or static declaration.");
+                return;
+            }
+            if (strcmp(current_instr.value, " , ") == 0) {
+                current_instr = advance_parser(jack_file);
+            }
+        }
+
+}
+
 // TODO: field / static uses almost the same code. Can be united
 void compile_parameter_list(FILE *jack_file, xmlNodePtr node, CurrentInstr current_instr) {
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
@@ -348,6 +384,64 @@ void compile_parameter_list(FILE *jack_file, xmlNodePtr node, CurrentInstr curre
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
 }
 
+void compile_statements(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
+    xmlNodePtr statements_node = xmlNewChild(root_node, NULL, BAD_CAST "statements", BAD_CAST "");
+    while (strcmp(current_instr.value, " let ") == 0) {
+        xmlNodePtr let_node = xmlNewChild(statements_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.type, "identifier") != 0) {
+            fprintf(stderr, "Error: let statement not followed by identifier.\n");
+            return;
+        }
+        xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.value, " = ") != 0) {
+            fprintf(stderr, "Error: Equal sign missing let statement.\n");
+            return;
+        }
+        xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        // TODO: compile_expression
+        // integerConstant, stringConstant, keyword (true, false, null, this)
+        // identifier[expression] 
+
+        // expressionList for doStatement later eg or for soubroutineCall (herre) is 
+        // <expressionList><expression><term><identifier>SomeIdent</identifier></term><symbol>,</symbol><expression>...</expressionList>
+        // So basically call compile_expression until no more ,
+
+        // compile_expression
+        // <expression><term><identifier/stringConstant/integerConstant/keyword>SomeIdentifierOrSo</identifier>[?(?moreexpressions?</term><symbol>+</symbol>more terms</expression>
+        // So it is 1) expression 2) term 2a) if [ or ( i start from 2 again 2b) close ] ) and term 3) symbol 4) start from 2 again or end
+
+
+        current_instr = advance_parser(jack_file);
+    }
+    // TODO:
+    // letStatement - let varName expression = expression;
+    // ifStatement - if expression { statements } else { statements }
+    // whileStatement - while expresssion { statements }
+    // doStatement - do subroutineCall;
+    // returnStatement - return expression?;
+    // expressionList function calls
+}
+
+void compile_subroutine_body(FILE *jack_file, xmlNodePtr root_node) {
+    CurrentInstr current_instr = advance_parser(jack_file);
+    if (strcmp(current_instr.value, " { ") != 0) {
+        fprintf(stderr, "Error: Missing opening brace subroutine body.\n");
+    }
+    xmlNodePtr body_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineBody", BAD_CAST "");
+    xmlNewChild(body_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.value, " var ") == 0) {
+
+        compile_var_dec(jack_file, body_node, current_instr, "varDec");
+        current_instr = advance_parser(jack_file);
+    }
+    compile_statements(jack_file, body_node, current_instr);
+
+}
+
 void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
         char *subr_val = current_instr.value;
         xmlNodePtr subr_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST "");
@@ -383,42 +477,7 @@ void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr 
         }
 
         compile_parameter_list(jack_file, subr_node, current_instr);
-
-}
-
-void compile_class_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
-        xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST "");
-        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-
-        current_instr = advance_parser(jack_file);
-        if (
-        strcmp(current_instr.type, "identifier") != 0 
-        && strcmp(current_instr.value, " boolean ") != 0 
-        && strcmp(current_instr.value, " int ") != 0 
-        && strcmp(current_instr.value, " char ") != 0
-        ) {
-            fprintf(stderr, "Error: Field or static variable not followed by correct type");
-            return;
-        }
-
-        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-
-        current_instr = advance_parser(jack_file);
-        while (strcmp(current_instr.type, "identifier") == 0) {
-            xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-            current_instr = advance_parser(jack_file);
-            if (strcmp(current_instr.type, "symbol") == 0) {
-                xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
- 
-            } else {
-                fprintf(stderr, "Error: missing symbol in field or static declaration.");
-                return;
-            }
-            if (strcmp(current_instr.value, " , ") == 0) {
-                current_instr = advance_parser(jack_file);
-            }
-        }
-
+        compile_subroutine_body(jack_file, subr_node);
 }
 
 void compile_class(FILE *jack_file, xmlNodePtr node) {
@@ -452,7 +511,7 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
     current_instr = advance_parser(jack_file);
     while (strcmp(current_instr.value, " static ") == 0 || strcmp(current_instr.value, " field ") == 0) {
 
-        compile_class_var_dec(jack_file, node, current_instr);
+        compile_var_dec(jack_file, node, current_instr, "classVarDec");
         current_instr = advance_parser(jack_file);
     }
 
