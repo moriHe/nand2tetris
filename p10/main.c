@@ -384,10 +384,85 @@ void compile_parameter_list(FILE *jack_file, xmlNodePtr node, CurrentInstr curre
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
 }
 
+void compile_expression(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr, char *stop) {
+    xmlNodePtr expr_node = xmlNewChild(root_node, NULL, BAD_CAST "expression", BAD_CAST NULL);
+    while (strcmp(current_instr.value, stop) != 0) {
+        xmlNodePtr term_node = xmlNewChild(expr_node, NULL, BAD_CAST "term", BAD_CAST NULL);
+        if (strcmp(current_instr.type, "stringConstant") == 0 || strcmp(current_instr.type, "integerConstant") == 0) {
+            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.value, " ; ") == 0) {
+                continue;
+            } else if (strcmp(current_instr.type, "symbol") == 0) {
+                xmlNewChild(expr_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+                continue;
+            } else {
+                fprintf(stderr, "Error: No symbol or semicolon after term,");
+                return;
+            }
+        } else if (strcmp(current_instr.type, "identifier") == 0) {
+            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.value, " [ ") == 0) {
+                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                compile_expression(jack_file, term_node, current_instr, " ] ");
+                current_instr = advance_parser(jack_file);
+                continue;
+            } else if (strcmp(current_instr.value, " ( ") == 0) {
+                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                compile_expression(jack_file, term_node, current_instr, " ) ");
+                current_instr = advance_parser(jack_file);
+                continue;
+            } else if (strcmp(current_instr.value, " . ") == 0) {
+                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                compile_expression(jack_file, term_node, current_instr, " . ");
+                current_instr = advance_parser(jack_file);
+                continue;
+            } else if (strcmp(current_instr.value, " ; ") == 0) {
+                continue;
+            } else if (strcmp(current_instr.type, "symbol") == 0) {
+                xmlNewChild(expr_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+                continue;
+            }
+        } else {
+            printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
+            fprintf(stderr, "Error: This should not happen in compile_expression?\n");
+            return;
+        }
+        
+    }
+
+    xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+}
+
+void compile_expression_list(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
+    if (strcmp(current_instr.value, " ( ") != 0) {
+        fprintf(stderr, "Error: expressionList missing opening (\n");
+        return;
+    }
+    xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    xmlNodePtr expr_list_node = xmlNewChild(root_node, NULL, BAD_CAST "expressionList", BAD_CAST NULL);
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.value, " ) ") != 0) {
+        compile_expression(jack_file, expr_list_node, current_instr, " , ");
+    }
+    xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    if (strcmp(current_instr.value, " ; ") != 0) {
+        fprintf(stderr, "Error: Missing semicolon after doStatement\n");
+        return;
+    }
+    xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+
+}
+
 void compile_statements(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
     xmlNodePtr statements_node = xmlNewChild(root_node, NULL, BAD_CAST "statements", BAD_CAST "");
     while (strcmp(current_instr.value, " let ") == 0) {
-        xmlNodePtr let_node = xmlNewChild(statements_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        xmlNodePtr let_node = xmlNewChild(statements_node, NULL, BAD_CAST "letStatement", BAD_CAST NULL);
+        xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
         if (strcmp(current_instr.type, "identifier") != 0) {
             fprintf(stderr, "Error: let statement not followed by identifier.\n");
@@ -400,6 +475,7 @@ void compile_statements(FILE *jack_file, xmlNodePtr root_node, CurrentInstr curr
             return;
         }
         xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        compile_expression(jack_file, let_node, advance_parser(jack_file), " ; ");
         // TODO: compile_expression
         // integerConstant, stringConstant, keyword (true, false, null, this)
         // identifier[expression] 
@@ -414,6 +490,31 @@ void compile_statements(FILE *jack_file, xmlNodePtr root_node, CurrentInstr curr
 
 
         current_instr = advance_parser(jack_file);
+    }
+
+    while (strcmp(current_instr.value, " do ") == 0) {
+        xmlNodePtr do_node = xmlNewChild(statements_node, NULL, BAD_CAST "doStatement", BAD_CAST NULL);
+        xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.type, "identifier") != 0) {
+            fprintf(stderr, "Error: missing identifier doStatement.\n");
+            return;
+        }
+        xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.value, " . ") == 0) {
+            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.type, "identifier") != 0) {
+                fprintf(stderr, "Error: Missing identifier after . in doStatement.\n");
+                return;
+            }
+             xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+             current_instr = advance_parser(jack_file);
+        }
+        compile_expression_list(jack_file, do_node, current_instr);
+        current_instr = advance_parser(jack_file);
+
     }
     // TODO:
     // letStatement - let varName expression = expression;
