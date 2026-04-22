@@ -431,8 +431,8 @@ void compile_expression(FILE *jack_file, xmlNodePtr root_node, CurrentInstr curr
                 xmlUnlinkNode(term_node);
                 xmlFreeNode(term_node);
             }
-            printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
-            fprintf(stderr, "Error: This should not happen in compile_expression?\n");
+            printf("type=%s, val=%s, stop=%s\n", current_instr.type, current_instr.value, stop);
+            fprintf(stderr, "Really an Error?: Thoguht this should not happen but can happen now. Would mean an () bracket maybe?\n");
             break;
         }
         
@@ -457,9 +457,8 @@ void compile_expression_list(FILE *jack_file, xmlNodePtr root_node, CurrentInstr
     if (strcmp(current_instr.value, " ) ") == 0) {
         xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     } else {
-        while (strcmp(current_instr.value, " ) ") != 0) {
-            compile_expression(jack_file, expr_list_node, current_instr, " ) ");
-        }
+        compile_expression(jack_file, expr_list_node, current_instr, " ) ");
+        current_instr = advance_parser(jack_file);
     }
 
 }
@@ -528,12 +527,13 @@ CurrentInstr compile_statements(FILE *jack_file, xmlNodePtr statements_node, Cur
         return compile_statements(jack_file, statements_node, current_instr, close_tag_node);
     }
 
+
+
     // returnStatement: 'return' expression? ';'
-    // Done: letStatement, doStatement
+    // Done: letStatement, doStatement, returnStatement
     // TODO:
     // ifStatement - if expression { statements } else { statements }
     // whileStatement - while expresssion { statements }
-    // returnStatement - return expression?;
     return current_instr;
 }
 
@@ -558,7 +558,6 @@ void compile_subroutine_body(FILE *jack_file, xmlNodePtr root_node) {
         return;
     }
     xmlNewChild(body_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-    current_instr = advance_parser(jack_file);
 }
 
 void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
@@ -637,6 +636,7 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
     while (strcmp(current_instr.value, " constructor ") == 0 ||strcmp(current_instr.value, " method ") == 0 || strcmp(current_instr.value, " function ") == 0) {
         compile_subroutine_dec(jack_file, node, current_instr);
         current_instr = advance_parser(jack_file);
+        printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
     }
 
     // Done:
