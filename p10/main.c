@@ -310,351 +310,399 @@ CurrentInstr advance_parser(FILE *jack_file)
     return resp;
 }
 
+bool is_valid_type(CurrentInstr current_instr) {
+    if (strcmp(current_instr.type, "identifier") == 0
+    || strcmp(current_instr.value, " boolean " ) == 0
+    || strcmp(current_instr.value, " int ") == 0
+    || strcmp(current_instr.value, " char ") == 0) {
+        return true;
+    }
 
-void compile_var_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr, char *root_node_identifier) {
-        xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST root_node_identifier, BAD_CAST "");
-        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-
-        current_instr = advance_parser(jack_file);
-        if (
-        strcmp(current_instr.type, "identifier") != 0 
-        && strcmp(current_instr.value, " boolean ") != 0 
-        && strcmp(current_instr.value, " int ") != 0 
-        && strcmp(current_instr.value, " char ") != 0
-        ) {
-            fprintf(stderr, "Error: Field or static variable not followed by correct type");
-            return;
-        }
-
-        xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-
-        current_instr = advance_parser(jack_file);
-        while (strcmp(current_instr.type, "identifier") == 0) {
-            xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-            current_instr = advance_parser(jack_file);
-            if (strcmp(current_instr.type, "symbol") == 0) {
-                xmlNewChild(var_dec_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
- 
-            } else {
-                fprintf(stderr, "Error: missing symbol in field or static declaration.");
-                return;
-            }
-            if (strcmp(current_instr.value, " , ") == 0) {
-                current_instr = advance_parser(jack_file);
-            }
-        }
-
+    return false;
 }
 
-// TODO: field / static uses almost the same code. Can be united
-void compile_parameter_list(FILE *jack_file, xmlNodePtr node, CurrentInstr current_instr) {
-    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-    xmlNodePtr param_list_node = xmlNewChild(node, NULL, BAD_CAST "parameterList", BAD_CAST "");
-    current_instr = advance_parser(jack_file);
+CurrentInstr compile_parameter_list(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    xmlNodePtr paramlist_node = xmlNewChild(root_node, NULL, BAD_CAST "parameterList", BAD_CAST "");
     while (strcmp(current_instr.value, " ) ") != 0) {
-        if (
-        strcmp(current_instr.type, "identifier") != 0 
-        && strcmp(current_instr.value, " boolean ") != 0 
-        && strcmp(current_instr.value, " int ") != 0 
-        && strcmp(current_instr.value, " char ") != 0
-        ) {
-            fprintf(stderr, "Error: Parameter List not followed by correct type\n");
-            return;
-        }
-        xmlNewChild(param_list_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.type, "identifier") != 0) {
-            fprintf(stderr, "Error: Parm List no identifier after type.\n");
-            return;
-        }
-        xmlNewChild(param_list_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.value, " , ") == 0) {
-            xmlNewChild(param_list_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-            current_instr = advance_parser(jack_file);
-        }
-    }
-
-    if (strcmp(current_instr.value, " ) ") != 0) {
-        fprintf(stderr, "Error: Param List not closed\n");
-        return;
-    }
-
-    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-}
-
-void compile_expression(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr, char *stop) {
-    xmlNodePtr expr_node = xmlNewChild(root_node, NULL, BAD_CAST "expression", BAD_CAST NULL);
-    while (strcmp(current_instr.value, stop) != 0) {
-        xmlNodePtr term_node = xmlNewChild(expr_node, NULL, BAD_CAST "term", BAD_CAST NULL);
-        if (strcmp(current_instr.type, "stringConstant") == 0 || strcmp(current_instr.type, "integerConstant") == 0) {
-            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-            current_instr = advance_parser(jack_file);
-            if (strcmp(current_instr.value, " ; ") == 0) {
-                continue;
-            } else if (strcmp(current_instr.type, "symbol") == 0) {
-                xmlNewChild(expr_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-                current_instr = advance_parser(jack_file);
-                continue;
-            } else {
-                fprintf(stderr, "Error: No symbol or semicolon after term,");
-                return;
-            }
-        } else if (strcmp(current_instr.type, "identifier") == 0) {
-            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-            current_instr = advance_parser(jack_file);
-            if (strcmp(current_instr.value, " [ ") == 0) {
-                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-                compile_expression(jack_file, term_node, current_instr, " ] ");
-                current_instr = advance_parser(jack_file);
-                continue;
-            } else if (strcmp(current_instr.value, " ( ") == 0) {
-                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-                compile_expression(jack_file, term_node, current_instr, " ) ");
-                current_instr = advance_parser(jack_file);
-                continue;
-            } else if (strcmp(current_instr.value, " . ") == 0) {
-                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-                compile_expression(jack_file, term_node, current_instr, " . ");
-                current_instr = advance_parser(jack_file);
-                continue;
-            } else if (strcmp(current_instr.value, " ; ") == 0) {
-                continue;
-            } else if (strcmp(current_instr.type, "symbol") == 0) {
-                xmlNewChild(expr_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-                current_instr = advance_parser(jack_file);
-                continue;
-            }
-        } else {
-            if (term_node->children == NULL) {
-                xmlUnlinkNode(term_node);
-                xmlFreeNode(term_node);
-            }
-            printf("type=%s, val=%s, stop=%s\n", current_instr.type, current_instr.value, stop);
-            fprintf(stderr, "Really an Error?: Thoguht this should not happen but can happen now. Would mean an () bracket maybe?\n");
-            break;
-        }
-        
-    }
-
-    if (expr_node->children == NULL) {
-        xmlUnlinkNode(expr_node);
-        xmlFreeNode(expr_node);
-    }
-
-    xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-}
-
-void compile_expression_list(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
-    if (strcmp(current_instr.value, " ( ") != 0) {
-        fprintf(stderr, "Error: expressionList missing opening (\n");
-        return;
-    }
-    xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-    xmlNodePtr expr_list_node = xmlNewChild(root_node, NULL, BAD_CAST "expressionList", BAD_CAST NULL);
-    current_instr = advance_parser(jack_file);
-    if (strcmp(current_instr.value, " ) ") == 0) {
-        xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-    } else {
-        compile_expression(jack_file, expr_list_node, current_instr, " ) ");
-        current_instr = advance_parser(jack_file);
-    }
-
-}
-
-CurrentInstr compile_statements(FILE *jack_file, xmlNodePtr statements_node, CurrentInstr current_instr, xmlNodePtr close_tag_node) {
-    if (strcmp(current_instr.value, " let ") == 0) {
-        xmlNodePtr let_node = xmlNewChild(statements_node, NULL, BAD_CAST "letStatement", BAD_CAST NULL);
-        xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.type, "identifier") != 0) {
-            fprintf(stderr, "Error: let statement not followed by identifier.\n");
-            return current_instr;
-        }
-        xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.value, " = ") != 0) {
-            fprintf(stderr, "Error: Equal sign missing let statement.\n");
-            return current_instr;
-        }
-        xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        compile_expression(jack_file, let_node, advance_parser(jack_file), " ; ");
-
-
-        current_instr = advance_parser(jack_file);
-        return compile_statements(jack_file, statements_node, current_instr, close_tag_node);
-    }
-
-    if (strcmp(current_instr.value, " do ") == 0) {
-        xmlNodePtr do_node = xmlNewChild(statements_node, NULL, BAD_CAST "doStatement", BAD_CAST NULL);
-        xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.type, "identifier") != 0) {
-            fprintf(stderr, "Error: missing identifier doStatement.\n");
-            return current_instr;
-        }
-        xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.value, " . ") == 0) {
-            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        if (is_valid_type(current_instr)) {
+            xmlNewChild(paramlist_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
             if (strcmp(current_instr.type, "identifier") != 0) {
-                fprintf(stderr, "Error: Missing identifier after . in doStatement.\n");
-            return current_instr;
+                fprintf(stderr, "Error: Missing identifier after type in param list.\n");
+                break;
             }
-             xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-             current_instr = advance_parser(jack_file);
+            xmlNewChild(paramlist_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.value, " , ") == 0) {
+                xmlNewChild(paramlist_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+            }
+        } else {
+            fprintf(stderr, "Error: Paramlist invalid type.\n");
+            break;
         }
-        compile_expression_list(jack_file, do_node, current_instr);
-        current_instr = advance_parser(jack_file);
-        if (strcmp(current_instr.value, " ; ") != 0) {
-            fprintf(stderr, "Error: Missing semicolon after doStatement\n");
-            return current_instr;
-        }
-        xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        current_instr = advance_parser(jack_file);
-        return compile_statements(jack_file, statements_node, current_instr, close_tag_node);
-
     }
-
-    if (strcmp(current_instr.value, " return ") == 0) {
-        xmlNodePtr return_node = xmlNewChild(statements_node, NULL, BAD_CAST "returnStatement", BAD_CAST NULL);
-        xmlNewChild(return_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        current_instr = advance_parser(jack_file);
-        compile_expression(jack_file, return_node, current_instr, " ; ");
-        current_instr = advance_parser(jack_file);
-        return compile_statements(jack_file, statements_node, current_instr, close_tag_node);
-    }
-
-
-
-    // returnStatement: 'return' expression? ';'
-    // Done: letStatement, doStatement, returnStatement
-    // TODO:
-    // ifStatement - if expression { statements } else { statements }
-    // whileStatement - while expresssion { statements }
     return current_instr;
 }
 
-void compile_subroutine_body(FILE *jack_file, xmlNodePtr root_node) {
-    CurrentInstr current_instr = advance_parser(jack_file);
-    if (strcmp(current_instr.value, " { ") != 0) {
-        fprintf(stderr, "Error: Missing opening brace subroutine body.\n");
-    }
-    xmlNodePtr body_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineBody", BAD_CAST "");
-    xmlNewChild(body_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-
+CurrentInstr compile_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "varDec", BAD_CAST "");
+    xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     current_instr = advance_parser(jack_file);
-    while (strcmp(current_instr.value, " var ") == 0) {
-
-        compile_var_dec(jack_file, body_node, current_instr, "varDec");
+    if (!is_valid_type(current_instr)) {
+        fprintf(stderr, "Error: Wrong type in vardec\n");
+        return current_instr;
+    }
+    xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.type, "identifier") == 0) {
+        xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
+        if (strcmp(current_instr.value, " , ") == 0) {
+            xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);           
+        }
     }
-    xmlNodePtr statements_node = xmlNewChild(body_node, NULL, BAD_CAST "statements", BAD_CAST "");
-    current_instr = compile_statements(jack_file, statements_node, current_instr, body_node);
-    if (strcmp(current_instr.value, " } ") != 0) {
-        fprintf(stderr, "Error: No closing braces for subroutine. current.val=%s\n", current_instr.value);
-        return;
+    if (strcmp(current_instr.value, " ; ") != 0) {
+        fprintf(stderr, "Error: Missing semicolon varDec\n");
+        return current_instr;
     }
-    xmlNewChild(body_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    
+    return current_instr;
 }
 
-void compile_subroutine_dec(FILE *jack_file, xmlNodePtr root_node, CurrentInstr current_instr) {
-        char *subr_val = current_instr.value;
-        xmlNodePtr subr_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST "");
-        xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+bool is_statement(CurrentInstr current_instr) {
+    if (strcmp(current_instr.value, " let ") == 0 ||
+    strcmp(current_instr.value, " if ") == 0 ||
+    strcmp(current_instr.value, " while ") == 0 ||
+    strcmp(current_instr.value, " do ") == 0 ||
+    strcmp(current_instr.value, " return ") == 0) {
+        return true;
+    }
+    return false;
+}
 
+bool is_operator(const char* val) {
+    if (val == NULL) return false;
+
+    if (strstr(val, "&lt;") || strstr(val, "&gt;") || strstr(val, "&amp;")) {
+        return true;
+    }
+
+    if (strlen(val) >= 2 && strchr("+-*/|=", val[1])) {
+        return true;
+    }
+
+    return false;
+}
+
+bool is_keyword_constant(CurrentInstr instr) {
+    if (instr.type == NULL || instr.value == NULL) return false;
+    
+    if (strcmp(instr.type, "keyword") != 0) return false;
+
+    if (strcmp(instr.value, " true ") == 0 ||
+        strcmp(instr.value, " false ") == 0 ||
+        strcmp(instr.value, " null ") == 0 ||
+        strcmp(instr.value, " this ") == 0) {
+        return true;
+    }
+
+    return false;
+}
+
+CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr node);
+CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr node) {
+    xmlNodePtr term_node = xmlNewChild(node, NULL, BAD_CAST "term", BAD_CAST "");
+
+    if (strcmp(current_instr.value, " ~ ") == 0 || strcmp(current_instr.value, " - ") == 0) {
+        xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
-        if (strcmp(subr_val, " function ") == 0 || strcmp(subr_val, " method ") == 0) {
-            if (strcmp(current_instr.type, "keyword") != 0) {
-                fprintf(stderr, "Error: Missing keyword after fn or method.\n");
-                return;
+        return compile_term(jack_file, current_instr, term_node);
+    } 
+    
+    else if (strcmp(current_instr.value, " ( ") == 0) {
+        xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        current_instr = compile_expression_node(jack_file, current_instr, term_node);
+        
+        xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        return advance_parser(jack_file); 
+    }
+
+    else if (strcmp(current_instr.type, "identifier") == 0) {
+        xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        
+        CurrentInstr next = advance_parser(jack_file);
+
+        if (strcmp(next.value, " [ ") == 0) {
+            xmlNewChild(term_node, NULL, BAD_CAST next.type, BAD_CAST next.value);
+            current_instr = advance_parser(jack_file);
+            current_instr = compile_expression_node(jack_file, current_instr, term_node);
+            
+            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            return advance_parser(jack_file);
+        } 
+        else if (strcmp(next.value, " ( ") == 0 || strcmp(next.value, " . ") == 0) {
+            // if next is . write to term. check next is identifier write to term. check next is ( write to term
+            // call subroutine on next
+            // for ( skip . and identifier
+            // TODO: call subroutine
+            // dont forget the )
+            return next; // *****************placeholder******************
+        }
+        else {
+            return next;
+        }
+    }
+
+    else {
+        if (strcmp(current_instr.type, "stringConstant") == 0 ||
+            strcmp(current_instr.type, "integerConstant") == 0 ||
+            is_keyword_constant(current_instr)) {
+            
+            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            return advance_parser(jack_file);
+        }
+    }
+
+    return current_instr;
+}
+
+CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr node) {
+    xmlNodePtr expr_node = xmlNewChild(node, NULL, BAD_CAST "expression", BAD_CAST "");  
+    current_instr = compile_term(jack_file, current_instr, expr_node);
+    if (expr_node->children->children == NULL) {
+        xmlUnlinkNode(expr_node);
+        xmlFreeNode(expr_node);
+        return current_instr;
+    }
+
+    while (is_operator(current_instr.value)) {
+            xmlNewChild(expr_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            current_instr = compile_term(jack_file, current_instr, expr_node);
+    }
+    return current_instr;
+}
+
+CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    bool has_return = false;
+    while(is_statement(current_instr)) {
+        if (strcmp(current_instr.value, " let ") == 0) {
+            xmlNodePtr let_node = xmlNewChild(root_node, NULL, BAD_CAST "letStatement", BAD_CAST "");    
+            xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.type, "identifier") != 0) {
+                fprintf(stderr, "Missing identifier let statement\n");
+                return current_instr;
             }
-            xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+            xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.value, " = ") != 0) {
+                fprintf(stderr, "Error missing equal sign let statement\n");
+                return current_instr;
+            }            
+            xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            current_instr = compile_expression_node(jack_file, current_instr, let_node);    
+            if (strcmp(current_instr.value, " ; ") != 0) {
+                fprintf(stderr, "Error: Missing semicolon end of let statement\n");
+                return current_instr;
+            }
+            xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+        } else if (strcmp(current_instr.value, " do ") == 0) {
+            xmlNodePtr do_node = xmlNewChild(root_node, NULL, BAD_CAST "doStatement", BAD_CAST "");    
+            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.type, "identifier") != 0) {
+                fprintf(stderr, "Missing identifier do statement\n");
+                return current_instr;
+            }
+            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
 
-        }
+            if (strcmp(current_instr.value, " . ") == 0) {
+                xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+                if (strcmp(current_instr.type, "identifier") != 0) {
+                    fprintf(stderr, "Missing identifier after point doStatement\n");
+                    return current_instr;
+                }
+                xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+            }
 
-        if (strcmp(current_instr.type, "identifier") != 0) {
-            printf("val=%s\n", current_instr.value);
-            fprintf(stderr, "Error: Missing identifier in subroutine declaration.\n");
-            return;
+            if (strcmp(current_instr.value, " ( ") != 0) {
+                fprintf(stderr, "Missing opening bracket do statement\n");
+                return current_instr;
+            }
+            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            xmlNodePtr expr_list_node = xmlNewChild(do_node, NULL, BAD_CAST "expressionList", BAD_CAST "");
+            current_instr = compile_expression_node(jack_file, current_instr, expr_list_node);
+            while (strcmp(current_instr.value, " , ") == 0) {
+                current_instr = compile_expression_node(jack_file, current_instr, expr_list_node);
+            }
+            if (strcmp(current_instr.value, " ) ") != 0) {
+                fprintf(stderr, "Error: No closing ) for expr list in dostatement\n");
+                return current_instr;
+            }
+            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.value, " ; ") != 0) {
+                fprintf(stderr, "Error: Missing semicolon do statment\n");
+                return current_instr;
+            }
+            xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
+        } else if(strcmp(current_instr.value, " return ") == 0) {
+            has_return = true;
+            xmlNodePtr return_node = xmlNewChild(root_node, NULL, BAD_CAST "returnStatement", BAD_CAST "");
+            xmlNewChild(return_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+            current_instr = compile_expression_node(jack_file, current_instr, return_node);
+            if (strcmp(current_instr.value, " ; ") != 0) {
+                fprintf(stderr, "Error: Missing semicolon return statement\n");
+                return current_instr;
+            }
+            xmlNewChild(return_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);
+        } else {
+            current_instr = advance_parser(jack_file);
         }
-        xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
+    }
 
+    if (!has_return) {
+        fprintf(stderr, "Error: Missing return statement in subroutine.\n");
+        return current_instr;
+    }
+
+    return current_instr;
+}
+
+CurrentInstr compile_subroutine_body(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {  
+    if (strcmp(current_instr.value, " { ") != 0) {
+        fprintf(stderr, "Error: Missing opening Braces subroutine body.\n");
+        return current_instr;        
+    }
+    xmlNodePtr body_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineBody", BAD_CAST "");
+    xmlNewChild(body_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.value, " var ") == 0) {
+    current_instr = compile_var_dec(jack_file, current_instr, body_node);
+    }
+
+    xmlNodePtr statement_node = xmlNewChild(body_node, NULL, BAD_CAST "statements", BAD_CAST "");
+    current_instr = compile_statements(jack_file, current_instr, statement_node);
+    if (strcmp(current_instr.value, " } ") != 0) {
+        fprintf(stderr, "Error: Missing closing brace for subroutine body\n");
+        return current_instr;
+    }
+    xmlNewChild(body_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+}
+
+CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    bool is_constructor = strcmp(current_instr.value, " constructor ") == 0;
+    xmlNodePtr subroutine_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST "");
+    xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    if (!is_valid_type(current_instr) && strcmp(current_instr.value, " void ") != 0) {
+        fprintf(stderr, "Error: Invalid subroutine return type. val=%s\n", current_instr.value);
+        return current_instr;
+    }
+    xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    if (strcmp(current_instr.type, "identifier") != 0) {
+        fprintf(stderr, "Error: Missing subroutine identifier.\n");
+        return current_instr;
+    } 
+    xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    if (is_constructor) {
+        if (strcmp(current_instr.value, " new ") != 0) {
+            fprintf(stderr, "Error: Missing new keyword constructor. val=%s\n", current_instr.value);
+            return current_instr;
+        }
+        xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
-        if (strcmp(subr_val, " constructor ") == 0) {
-            xmlNewChild(subr_node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-            current_instr = advance_parser(jack_file);
-        }
+    }
 
-        if (strcmp(current_instr.value, " ( ") != 0) {
-            fprintf(stderr, "Error: Missing opening paranthesis in subroutine decl.\n");
-            return;
-        }
+    if (strcmp(current_instr.value, " ( ") != 0) {
+        fprintf(stderr, "Error: Missing opening Paranthesis parameterlist.\n");
+        return current_instr;
+    }
+    xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    current_instr = compile_parameter_list(jack_file, current_instr, subroutine_node);    
+    if (strcmp(current_instr.value, " ) ") != 0) {
+        fprintf(stderr, "Error: Missing closing Paranthesis parameterlist.\n");
+        return current_instr;       
+    }
+    xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    compile_subroutine_body(jack_file, current_instr, subroutine_node);
 
-        compile_parameter_list(jack_file, subr_node, current_instr);
-        compile_subroutine_body(jack_file, subr_node);
+    return current_instr;
+}
+
+CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST "");
+    xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    if (!is_valid_type(current_instr)) {
+        fprintf(stderr, "Error: static or field missing type. type=%s, val=%s\n", current_instr.type, current_instr.value);
+        return current_instr;
+    }
+    xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+    current_instr = advance_parser(jack_file);
+    while (strcmp(current_instr.type, "identifier") == 0) {
+        xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+    }
+
+    return current_instr;
 }
 
 void compile_class(FILE *jack_file, xmlNodePtr node) {
     // Check for class keyword
     CurrentInstr current_instr = advance_parser(jack_file);
-    if (strcmp(current_instr.value, " class ") == 0) {
-        xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
-    } else {
-        fprintf(stderr, "Error: File does not start with class keyword");
+    if (strcmp(current_instr.value, " class ") != 0) {
+        fprintf(stderr, "Error: File does not start with class keyword.\n");
         return;
-    }
-
-    // Check for class identifier
+    } 
+    
+    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     current_instr = advance_parser(jack_file);
     if (strcmp(current_instr.type, "identifier") != 0) {
-        fprintf(stderr, "Error: No follow up identifier");
+        fprintf(stderr, "Error: Missing class identifier.\n");
         return;
-    } else {
-        xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     }
-    
-    // Check for opening bracket
+    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     current_instr = advance_parser(jack_file);
     if (strcmp(current_instr.value, " { ") != 0) {
-        fprintf(stderr, "Error: No opening bracket");
+        fprintf(stderr, "Error: Missing class opening braces.\n");
         return;
-    } else {
-        xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     }
-
+    xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     current_instr = advance_parser(jack_file);
-    while (strcmp(current_instr.value, " static ") == 0 || strcmp(current_instr.value, " field ") == 0) {
-
-        compile_var_dec(jack_file, node, current_instr, "classVarDec");
-        current_instr = advance_parser(jack_file);
-    }
-
-    while (strcmp(current_instr.value, " constructor ") == 0 ||strcmp(current_instr.value, " method ") == 0 || strcmp(current_instr.value, " function ") == 0) {
-        compile_subroutine_dec(jack_file, node, current_instr);
-        current_instr = advance_parser(jack_file);
-        printf("type=%s, val=%s\n", current_instr.type, current_instr.value);
-    }
-
-    // Done:
-    // compile_class (kinda. I mean all other methods descent from class)
-    // compile_class_var_dec
-    // compile_subroutine
-    // compile_parameter_list
-
-    // TODOs: 
-    // compile subroutineBody
+    while (strcmp(current_instr.value, " static ") == 0 
+    || strcmp(current_instr.value, " field ") == 0) {
+        current_instr = compile_class_var_dec(jack_file, current_instr, node);
+    }   
     
-    // compile_var_dec
-    // compile_statements
-        // compile_let, compile_if, compile_while, compile_do, compile_return
-
-    // compile_expression (identifies a term and any subsquent operators)
-    // compile_term (constants, vairables and array indexing)
-    // compile_expression_list
+    while (strcmp(current_instr.value, " function ") == 0 || 
+    strcmp(current_instr.value, " method ") == 0 || 
+    strcmp(current_instr.value, " constructor ") == 0) {
+        current_instr = compile_subroutine(jack_file, current_instr, node);
+    }
     return;
 }
 
@@ -668,16 +716,6 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
     xmlDocSetRootElement(doc, root_node);
     compile_class(jack_file, root_node);
 
-    /*
-    bool has_tokens = true;
-    while (has_tokens) {
-        CurrentInstr current_instr = advance_parser(jack_file);
-        if (current_instr.type != NULL)
-            xmlNewChild(root_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        else 
-            has_tokens = false;
-    }
-    */
 
     xmlSaveCtxtPtr ctxt = xmlSaveToFilename(xml_t_ident, NULL, XML_SAVE_NO_DECL | XML_SAVE_FORMAT | XML_SAVE_NO_EMPTY);
     if (ctxt) {
