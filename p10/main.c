@@ -448,18 +448,20 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
             xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             return advance_parser(jack_file);
         } 
-        else if (strcmp(current_instr.value, " . ") == 0) {
-            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-            current_instr = advance_parser(jack_file);
-            if (strcmp(current_instr.type, "identifier") != 0) {
-                fprintf(stderr, "Error: Missing identifier after . in compile term\n");
-                return current_instr;
-            }
-            xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-            current_instr = advance_parser(jack_file);
-            if (strcmp(current_instr.value, " ( ") != 0) {
-                fprintf(stderr, "Error: Missing ( in term . \n");
-                return current_instr;
+        else if (strcmp(current_instr.value, " . ") == 0 || strcmp(current_instr.value, " ( ") == 0) {
+            if (strcmp(current_instr.value, " . ") == 0) {
+                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+                if (strcmp(current_instr.type, "identifier") != 0) {
+                    fprintf(stderr, "Error: Missing identifier after . in compile term\n");
+                    return current_instr;
+                }
+                xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+                if (strcmp(current_instr.value, " ( ") != 0) {
+                    fprintf(stderr, "Error: Missing ( in term . \n");
+                    return current_instr;
+                }
             }
             xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
@@ -481,11 +483,7 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
             current_instr = advance_parser(jack_file);
             return current_instr;
             
-        } 
-        else if (strcmp(current_instr.value, " ( ") == 0) {
-
-        }
-        else {
+        } else {
             return current_instr;
         }
     }
@@ -530,8 +528,17 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 fprintf(stderr, "Missing identifier let statement\n");
                 return current_instr;
             }
+            // TODO: hier könnte [expression] kommen
             xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
+            if (strcmp(current_instr.value, " [ ") == 0) {
+                xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+                current_instr = compile_expression_node(jack_file, current_instr, let_node);
+                
+                xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+                current_instr = advance_parser(jack_file);
+            } 
             if (strcmp(current_instr.value, " = ") != 0) {
                 fprintf(stderr, "Error missing equal sign let statement\n");
                 return current_instr;
@@ -664,6 +671,42 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 xmlNewChild(if_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);                              
             }        
+        } else if (strcmp(current_instr.value, " while ") == 0) {
+            // 'while' '(' expression ')' '{' statements '}'
+            xmlNodePtr while_node = xmlNewChild(root_node, NULL, BAD_CAST "whileStatement", BAD_CAST "");    
+            xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);  
+            if (strcmp(current_instr.value, " ( ") != 0) {
+                fprintf(stderr, "Error: Missing ( in whileStatement\n");
+                return current_instr;
+            }  
+            xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);      
+            current_instr = compile_expression_node(jack_file, current_instr, while_node);
+            if (strcmp(current_instr.value, " ) ") != 0) {
+                fprintf(stderr, "Error: Missing ) in whileStatement\n");
+                return current_instr;                
+            } 
+            xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);  
+
+            if (strcmp(current_instr.value, " { ") != 0) {
+                fprintf(stderr, "Error: Missing { in whileStatement\n");
+                return current_instr;                    
+            }
+            xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);  
+            xmlNodePtr while_statements_node = xmlNewChild(while_node, NULL, BAD_CAST "statements", BAD_CAST "");    
+            current_instr = compile_statements(jack_file, current_instr, while_statements_node);
+            if (while_statements_node->children == NULL) {
+                xmlNodeSetContent(while_statements_node, BAD_CAST "\n");
+            }
+            if (strcmp(current_instr.value, " } ") != 0) {
+                fprintf(stderr, "Error: Missing } in while statement block\n");
+                return current_instr;                  
+            }
+            xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            current_instr = advance_parser(jack_file);  
         } else {
             current_instr = advance_parser(jack_file);
         }
