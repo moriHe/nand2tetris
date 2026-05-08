@@ -18,7 +18,6 @@ typedef struct Node {
 CurrentInstr advance_parser(FILE *jack_file);
 Node *get_node(const char *key);
 void insert_node(const char *key);
-unsigned long hash(const char *str);
 bool is_int(const char *str);
 
 #endif

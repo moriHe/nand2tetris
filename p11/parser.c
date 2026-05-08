@@ -1,9 +1,20 @@
-#include "parser.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "parser.h"
+
 #define HASH_SIZE 101
+
+static unsigned long hash(const char *str) {
+    unsigned long hash_num = 5381;
+    int c;
+    while (c = *str++) {
+        hash_num = ((hash_num << 5) + hash_num) + c;
+    }
+
+    return hash_num;
+}
 
 bool is_int(const char *str) {
     char *endptr;
@@ -15,16 +26,6 @@ bool is_int(const char *str) {
 }
 
 Node *hash_table[HASH_SIZE] = {NULL};
-
-unsigned long hash(const char *str) {
-    unsigned long hash_num = 5381;
-    int c;
-    while (c = *str++) {
-        hash_num = ((hash_num << 5) + hash_num) + c;
-    }
-
-    return hash_num;
-}
 
 Node *get_node(const char *key) {
     unsigned long hash_num = hash(key);

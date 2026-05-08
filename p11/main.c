@@ -10,6 +10,7 @@
 #include <dirent.h>
 
 #include "parser.h"
+#include "symbol_table.h"
 
 const char *keywords[] = {"class", "constructor", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return", "function"};
 int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
