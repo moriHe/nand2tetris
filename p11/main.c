@@ -12,6 +12,9 @@
 #include "parser.h"
 #include "symbol_table.h"
 
+int static_index = 0;
+int field_index = 0;
+
 const char *keywords[] = {"class", "constructor", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return", "function"};
 int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -21,10 +24,6 @@ bool is_line_overflow(char* buf, FILE *jack_file) {
     }
 
     return false;
-}
-
-void write_identifier_or_integer() {
-
 }
 
 
@@ -512,7 +511,8 @@ CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xml
     return current_instr;
 }
 
-CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node, Kind kind) {
+    char buffer[256];
     xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "classVarDec", BAD_CAST "");
     xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     current_instr = advance_parser(jack_file);
@@ -520,10 +520,22 @@ CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, 
         fprintf(stderr, "Error: static or field missing type. type=%s, val=%s\n", current_instr.type, current_instr.value);
         return current_instr;
     }
+    char *type = current_instr.value;
     xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     current_instr = advance_parser(jack_file);
     while (strcmp(current_instr.type, "identifier") == 0) {
+        Identifier *ident = get_ident(current_instr.value, class_table);
+        if (ident == NULL) {
+            insert_ident(current_instr.value, type, kind == K_STATIC ? static_index : field_index, kind, class_table);
+            kind == K_STATIC ? static_index++ : field_index++;
+        } else {
+            fprintf(stderr, "Warn: Declared static or field identifier twice.\n");
+        }
+        ident = get_ident(current_instr.value, class_table);
+        snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
+             ident->name, ident->type, ident->kind, ident->kind_index);
         xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        xmlNewChild(var_dec_node, NULL, BAD_CAST "p11", BAD_CAST buffer);
         current_instr = advance_parser(jack_file);
         xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
@@ -556,7 +568,7 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
     current_instr = advance_parser(jack_file);
     while (strcmp(current_instr.value, " static ") == 0 
     || strcmp(current_instr.value, " field ") == 0) {
-        current_instr = compile_class_var_dec(jack_file, current_instr, node);
+        current_instr = compile_class_var_dec(jack_file, current_instr, node, strcmp(current_instr.value, "static") == 0 ? K_STATIC : K_FIELD);
     }   
     
     while (strcmp(current_instr.value, " function ") == 0 || 
@@ -576,6 +588,8 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
         return;
     }
     xmlDocSetRootElement(doc, root_node);
+    static_index = 0;
+    field_index = 0;
     compile_class(jack_file, root_node);
 
 

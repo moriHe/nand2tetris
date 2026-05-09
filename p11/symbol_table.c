@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symbol_table.h"
-#define HASH_SIZE 10000
 
 Identifier *class_table[HASH_SIZE] = {NULL};
 Identifier *subroutine_table[HASH_SIZE] = {NULL};
@@ -31,7 +30,7 @@ Identifier *get_ident(const char *name, Identifier **hash_table) {
     return NULL;
 }
 
-void insert_ident(const char *name, const char *type, int kind_index, const char *kind_str, Identifier **hash_table)  {
+void insert_ident(const char *name, const char *type, int kind_index, Kind kind, Identifier **hash_table)  {
     unsigned long hash_num = hash(name);
     int index = hash_num % HASH_SIZE;
 
@@ -39,10 +38,7 @@ void insert_ident(const char *name, const char *type, int kind_index, const char
 
     new_node->name = strdup(name);
     new_node->type = strdup(type);
-    if (strcmp(kind_str, "static") == 0) new_node->kind = K_STATIC;
-    else if (strcmp(kind_str, "field") == 0) new_node->kind = K_FIELD;
-    else if (strcmp(kind_str, "var") == 0) new_node->kind = K_VAR;
-    else if (strcmp(kind_str, "arg") == 0) new_node->kind = K_ARG;
+    new_node->kind = kind;
     new_node->kind_index = kind_index;
 
     new_node->next = hash_table[index];
