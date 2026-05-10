@@ -14,6 +14,8 @@
 
 int static_index = 0;
 int field_index = 0;
+int var_index = 0;
+int arg_index = 0;
 
 const char *keywords[] = {"class", "constructor", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return", "function"};
 int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
@@ -40,16 +42,28 @@ bool is_valid_type(CurrentInstr current_instr) {
 }
 
 CurrentInstr compile_parameter_list(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    char buffer[256];
     xmlNodePtr paramlist_node = xmlNewChild(root_node, NULL, BAD_CAST "parameterList", BAD_CAST "");
     while (strcmp(current_instr.value, " ) ") != 0) {
         if (is_valid_type(current_instr)) {
+            char *type = current_instr.value;
             xmlNewChild(paramlist_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
             if (strcmp(current_instr.type, "identifier") != 0) {
                 fprintf(stderr, "Error: Missing identifier after type in param list.\n");
                 break;
             }
+            Identifier *ident = get_ident(current_instr.value, subroutine_table);
+            if (ident == NULL) {
+                insert_ident(current_instr.value, type, arg_index, K_ARG, subroutine_table);
+                arg_index++;
+            }
+
+            ident = get_ident(current_instr.value, subroutine_table);
+            snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
+                ident->name, ident->type, ident->kind, ident->kind_index);              
             xmlNewChild(paramlist_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            xmlNewChild(paramlist_node, NULL, BAD_CAST "p11-declaration", BAD_CAST buffer);
             current_instr = advance_parser(jack_file);
             if (strcmp(current_instr.value, " , ") == 0) {
                 xmlNewChild(paramlist_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
@@ -67,6 +81,7 @@ CurrentInstr compile_parameter_list(FILE *jack_file, CurrentInstr current_instr,
 }
 
 CurrentInstr compile_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    char buffer[256];
     xmlNodePtr var_dec_node = xmlNewChild(root_node, NULL, BAD_CAST "varDec", BAD_CAST "");
     xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     current_instr = advance_parser(jack_file);
@@ -74,10 +89,21 @@ CurrentInstr compile_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNod
         fprintf(stderr, "Error: Wrong type in vardec\n");
         return current_instr;
     }
+    char *type = current_instr.value;
     xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     current_instr = advance_parser(jack_file);
     while (strcmp(current_instr.type, "identifier") == 0) {
+        Identifier *ident = get_ident(current_instr.value, subroutine_table);
+        if (ident == NULL) {
+            insert_ident(current_instr.value, type, var_index, K_VAR, subroutine_table);
+            var_index++;
+        }
+
+        ident = get_ident(current_instr.value, subroutine_table);
+        snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
+             ident->name, ident->type, ident->kind, ident->kind_index);        
         xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        xmlNewChild(var_dec_node, NULL, BAD_CAST "p11-declaration", BAD_CAST buffer);
         current_instr = advance_parser(jack_file);
         if (strcmp(current_instr.value, " , ") == 0) {
             xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
@@ -136,6 +162,7 @@ bool is_keyword_constant(CurrentInstr instr) {
 
 CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr node);
 CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr node) {
+    char buffer[256];
     xmlNodePtr term_node = xmlNewChild(node, NULL, BAD_CAST "term", BAD_CAST "");
 
     if (strcmp(current_instr.value, " ~ ") == 0 || strcmp(current_instr.value, " - ") == 0) {
@@ -155,7 +182,16 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
 
     else if (strcmp(current_instr.type, "identifier") == 0) {
         xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        
+        Identifier *ident = get_ident(current_instr.value, subroutine_table);
+        if (ident == NULL) {
+            ident = get_ident(current_instr.value, class_table);
+        }
+        if (ident != NULL) {
+            snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
+            ident->name, ident->type, ident->kind, ident->kind_index);
+            xmlNewChild(term_node, NULL, BAD_CAST "p11-usage", BAD_CAST buffer);
+
+        }
         current_instr = advance_parser(jack_file);
 
         if (strcmp(current_instr.value, " [ ") == 0) {
@@ -236,6 +272,7 @@ CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr
 }
 
 CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
+    char buffer[256];
     bool has_return = false;
     while(is_statement(current_instr)) {
         if (strcmp(current_instr.value, " let ") == 0) {
@@ -246,7 +283,20 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 fprintf(stderr, "Missing identifier let statement\n");
                 return current_instr;
             }
-            // TODO: hier könnte [expression] kommen
+
+            Identifier *ident = get_ident(current_instr.value, subroutine_table);
+            if (ident == NULL) {
+                ident = get_ident(current_instr.value, class_table);
+            }
+            if (ident != NULL) {
+                snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
+                ident->name, ident->type, ident->kind, ident->kind_index);
+                xmlNewChild(let_node, NULL, BAD_CAST "p11-usage", BAD_CAST buffer);
+
+            } else {
+                fprintf(stderr, "Error: Missing table identifier let statement\n");
+            }
+
             xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
             if (strcmp(current_instr.value, " [ ") == 0) {
@@ -277,6 +327,16 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
             if (strcmp(current_instr.type, "identifier") != 0) {
                 fprintf(stderr, "Missing identifier do statement\n");
                 return current_instr;
+            }
+            Identifier *ident = get_ident(current_instr.value, subroutine_table);
+            if (ident == NULL) {
+                ident = get_ident(current_instr.value, class_table);
+            }
+            if (ident != NULL) {
+                snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
+                ident->name, ident->type, ident->kind, ident->kind_index);
+                xmlNewChild(do_node, NULL, BAD_CAST "p11-usage", BAD_CAST buffer);
+
             }
             xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
@@ -459,8 +519,8 @@ CurrentInstr compile_subroutine_body(FILE *jack_file, CurrentInstr current_instr
 }
 
 CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node) {
-    static int count = 0;
-    count++;
+    var_index = 0;
+    arg_index = 0;
     bool is_constructor = strcmp(current_instr.value, " constructor ") == 0;
     xmlNodePtr subroutine_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST "");
     xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
@@ -535,7 +595,7 @@ CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, 
         snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
              ident->name, ident->type, ident->kind, ident->kind_index);
         xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-        xmlNewChild(var_dec_node, NULL, BAD_CAST "p11", BAD_CAST buffer);
+        xmlNewChild(var_dec_node, NULL, BAD_CAST "p11-declaration", BAD_CAST buffer);
         current_instr = advance_parser(jack_file);
         xmlNewChild(var_dec_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
