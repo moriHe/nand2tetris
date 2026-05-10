@@ -634,6 +634,7 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
     while (strcmp(current_instr.value, " function ") == 0 || 
     strcmp(current_instr.value, " method ") == 0 || 
     strcmp(current_instr.value, " constructor ") == 0) {
+        // TODO for methods: Add this to the symbol table: name: this, type: ClassName, kind: K_ARG, index: 0
         current_instr = compile_subroutine(jack_file, current_instr, node);
     }
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
