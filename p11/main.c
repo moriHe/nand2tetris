@@ -16,6 +16,7 @@ int static_index = 0;
 int field_index = 0;
 int var_index = 0;
 int arg_index = 0;
+char *class_name;
 
 const char *keywords[] = {"class", "constructor", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return", "function"};
 int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
@@ -526,6 +527,9 @@ CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xml
     xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
     current_instr = advance_parser(jack_file);
     if (is_constructor) {
+        // TODO for methods: Add this to the symbol table: name: this, type: ClassName, kind: K_ARG, index: 0
+        insert_ident("this", class_name, arg_index, K_ARG, subroutine_table);
+        arg_index++;
         if (strcmp(current_instr.type, "identifier") != 0) {
             fprintf(stderr, "Error: Missing subroutine identifier.\n");
             return current_instr;
@@ -618,6 +622,7 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
         fprintf(stderr, "Error: Missing class identifier.\n");
         return;
     }
+    class_name = current_instr.value;
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     current_instr = advance_parser(jack_file);
     if (strcmp(current_instr.value, " { ") != 0) {
@@ -634,7 +639,6 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
     while (strcmp(current_instr.value, " function ") == 0 || 
     strcmp(current_instr.value, " method ") == 0 || 
     strcmp(current_instr.value, " constructor ") == 0) {
-        // TODO for methods: Add this to the symbol table: name: this, type: ClassName, kind: K_ARG, index: 0
         current_instr = compile_subroutine(jack_file, current_instr, node);
     }
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
@@ -651,6 +655,7 @@ void parse_file(FILE *jack_file, char* xml_t_ident) {
     xmlDocSetRootElement(doc, root_node);
     static_index = 0;
     field_index = 0;
+    class_name = NULL;
     compile_class(jack_file, root_node);
 
 
