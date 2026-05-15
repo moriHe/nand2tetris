@@ -69,7 +69,7 @@ CurrentInstr advance_parser(FILE *jack_file)
         {
             if (c == '"')
             {
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                snprintf(tmp, sizeof(tmp), "%s", current_instr);
                 resp.type = "stringConstant";
                 resp.value = strdup(tmp);
                 return resp;
@@ -137,7 +137,7 @@ CurrentInstr advance_parser(FILE *jack_file)
                 if (i > 0)
                 {
                     Node *node = get_node(current_instr);
-                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                    snprintf(tmp, sizeof(tmp), "%s", current_instr);
                     if (node != NULL)
                     {
                         resp.type = "keyword";
@@ -167,7 +167,7 @@ CurrentInstr advance_parser(FILE *jack_file)
                 if (i > 0)
                 {
                     Node *node = get_node(current_instr);
-                    snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                    snprintf(tmp, sizeof(tmp), "%s", current_instr);
                     if (node != NULL)
                     {
                         resp.type = "keyword";
@@ -194,7 +194,7 @@ CurrentInstr advance_parser(FILE *jack_file)
             {
                 ungetc(next, jack_file);
                 resp.type = "symbol";
-                resp.value = " / ";
+                resp.value = "/";
                 return resp;
             }
         }
@@ -204,7 +204,7 @@ CurrentInstr advance_parser(FILE *jack_file)
             if (i > 0)
             {
                 Node *node = get_node(current_instr);
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                snprintf(tmp, sizeof(tmp), "%s", current_instr);
                 if (node != NULL)
                 {
                     resp.type = "keyword";
@@ -232,7 +232,7 @@ CurrentInstr advance_parser(FILE *jack_file)
             {
                 // TODO: Evaluate current_isntr reset
                 Node *node = get_node(current_instr);
-                snprintf(tmp, sizeof(tmp), " %s ", current_instr);
+                snprintf(tmp, sizeof(tmp), "%s", current_instr);
                 if (node != NULL)
                 {
                     resp.type = "keyword";
@@ -255,19 +255,19 @@ CurrentInstr advance_parser(FILE *jack_file)
             resp.type = "symbol";
             if (c == '&')
             {
-                resp.value = " &amp; ";
+                resp.value = "&amp;";
             }
             else if (c == '<')
             {
-                resp.value = " &lt; ";
+                resp.value = "&lt;";
             }
             else if (c == '>')
             {
-                resp.value = " &gt; ";
+                resp.value = "&gt;";
             }
             else
             {
-                char symbol_str[4] = {' ', (char)c, ' ', '\0'};
+                char symbol_str[2] = {(char)c, '\0'};
                 resp.value = strdup(symbol_str);
             }
             return resp;
