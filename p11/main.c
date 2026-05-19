@@ -17,6 +17,9 @@ int field_index = 0;
 int var_index = 0;
 int arg_index = 0;
 char *class_name;
+int while_index = 0;
+char *current_subroutine_name = NULL;
+int if_index = 0;
 
 const char *keywords[] = {"class", "constructor", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return", "function"};
 int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
@@ -42,6 +45,18 @@ bool is_valid_type(CurrentInstr current_instr) {
     return false;
 }
 
+char *get_kind(Kind kind) {
+    if (kind == K_ARG) {
+        return "argument"; 
+    } else if (kind == K_VAR) {
+        return "local";
+    } else if (kind == K_STATIC) {
+        return "static";
+    }
+    // TODO What about Field?
+    return "unknown"; 
+}
+
 CurrentInstr compile_parameter_list(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node, FILE *vm_file) {
     int param_n = 0;
     char buffer[256];
@@ -57,7 +72,7 @@ CurrentInstr compile_parameter_list(FILE *jack_file, CurrentInstr current_instr,
                 break;
             }
             Identifier *ident = get_ident(current_instr.value, subroutine_table);
-            if (ident == NULL) {
+            if (ident == NULL || ident->kind != K_ARG) {
                 insert_ident(current_instr.value, type, arg_index, K_ARG, subroutine_table);
                 arg_index++;
             }
@@ -80,7 +95,7 @@ CurrentInstr compile_parameter_list(FILE *jack_file, CurrentInstr current_instr,
     if (paramlist_node->children == NULL) {
         xmlNodeSetContent(paramlist_node, BAD_CAST "\n");
     }
-    fprintf(vm_file, "%d\n", param_n);
+
     return current_instr;
 }
 
@@ -98,7 +113,7 @@ CurrentInstr compile_var_dec(FILE *jack_file, CurrentInstr current_instr, xmlNod
     current_instr = advance_parser(jack_file);
     while (strcmp(current_instr.type, "identifier") == 0) {
         Identifier *ident = get_ident(current_instr.value, subroutine_table);
-        if (ident == NULL) {
+        if (ident == NULL || ident->kind != K_VAR) {
             insert_ident(current_instr.value, type, var_index, K_VAR, subroutine_table);
             var_index++;
         }
@@ -168,23 +183,30 @@ CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr
 CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr node, FILE *vm_file) {
     char buffer[256];
     xmlNodePtr term_node = xmlNewChild(node, NULL, BAD_CAST "term", BAD_CAST "");
-
-    if (strcmp(current_instr.value, "~") == 0 || strcmp(current_instr.value, "-") == 0) {
+    if (strcmp(current_instr.value, "~") == 0) {
         xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
-        return compile_term(jack_file, current_instr, term_node, vm_file);
+        current_instr = compile_term(jack_file, current_instr, term_node, vm_file);
+        fprintf(vm_file, "not\n");
+        return current_instr;
+    } else if (strcmp(current_instr.value, "-") == 0) {
+        xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        current_instr = advance_parser(jack_file);
+        current_instr = compile_term(jack_file, current_instr, term_node, vm_file);
+        fprintf(vm_file, "neg\n");
+        return current_instr;
     } 
-    
     else if (strcmp(current_instr.value, "(") == 0) {
         xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
         current_instr = compile_expression_node(jack_file, current_instr, term_node, vm_file, false);
-        
+
         xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         return advance_parser(jack_file); 
     }
 
     else if (strcmp(current_instr.type, "identifier") == 0) {
+        char *base = current_instr.value;
         xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         Identifier *ident = get_ident(current_instr.value, subroutine_table);
         if (ident == NULL) {
@@ -194,7 +216,6 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
             snprintf(buffer, sizeof(buffer), "name: %s, type: %s, kind: %d, index: %d", 
             ident->name, ident->type, ident->kind, ident->kind_index);
             xmlNewChild(term_node, NULL, BAD_CAST "p11-usage", BAD_CAST buffer);
-
         }
         current_instr = advance_parser(jack_file);
 
@@ -207,6 +228,7 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
             return advance_parser(jack_file);
         } 
         else if (strcmp(current_instr.value, ".") == 0 || strcmp(current_instr.value, "(") == 0) {
+            char *point_ext = NULL;
             if (strcmp(current_instr.value, ".") == 0) {
                 xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);
@@ -214,22 +236,35 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
                     fprintf(stderr, "Error: Missing identifier after . in compile term\n");
                     return current_instr;
                 }
+                point_ext = current_instr.value;
+
                 xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);
                 if (strcmp(current_instr.value, "(") != 0) {
                     fprintf(stderr, "Error: Missing ( in term . \n");
                     return current_instr;
                 }
+
             }
             xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+
             current_instr = advance_parser(jack_file);
             xmlNodePtr expr_list_node = xmlNewChild(term_node, NULL, BAD_CAST "expressionList", BAD_CAST "");
-            current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
+            int args_n = 0;
+            if (strcmp(current_instr.value, ")") != 0) {
+                args_n++;
+                current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
+            }
             while (strcmp(current_instr.value, ",") == 0) {
                 xmlNewChild(expr_list_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);
                 current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
             }
+            fprintf(vm_file, "call %s", base);
+            if (point_ext != NULL) {
+                fprintf(vm_file, ".%s", point_ext);
+            }
+            fprintf(vm_file, " %d\n", args_n);
             if (expr_list_node->children == NULL) {
                 xmlNodeSetContent(expr_list_node, BAD_CAST "\n");
             }
@@ -239,9 +274,13 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
             }
             xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
+
             return current_instr;
             
         } else {
+            if (ident != NULL) {
+                fprintf(vm_file, "push %s %d\n", get_kind(ident->kind), ident->kind_index);
+            }
             return current_instr;
         }
     }
@@ -249,7 +288,16 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
     else {
         //@VM-OPERRATION
         if (strcmp(current_instr.type, "integerConstant") == 0) {
-          fprintf(vm_file, "push constant %s\n", current_instr.value);  
+          fprintf(vm_file, "push constant %s\n", current_instr.value);
+
+        }
+        if (strcmp(current_instr.value, "true") == 0 || strcmp(current_instr.value, "false") == 0) {
+            //@VM-OPERATION
+            fprintf(vm_file, "push constant 0\n");
+        }
+        if (strcmp(current_instr.value, "true") == 0) {
+            //@VM-OPERATION
+            fprintf(vm_file, "not\n");
         }
         if (strcmp(current_instr.type, "stringConstant") == 0 ||
             strcmp(current_instr.type, "integerConstant") == 0 ||
@@ -275,7 +323,9 @@ CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr
         xmlUnlinkNode(expr_node);
         xmlFreeNode(expr_node);
         //@VM-OPERATION
-        fprintf(vm_file, "push constant 0\nreturn\n");
+        if (is_return) {
+            fprintf(vm_file, "push constant 0\n");
+        }
         return current_instr;
     }
     //@VM-OPERATION
@@ -290,13 +340,36 @@ CurrentInstr compile_expression_node(FILE *jack_file, CurrentInstr current_instr
     }
     //@VM-OPERATION
     // TODO: Handle others
-    for (int j = i - 1; j >= 0; j--) {
-        if (strcmp(ops[j], "+") == 0) {
-            fprintf(vm_file, "add\n");
-        } else if (strcmp(ops[j], "*") == 0) {
-            fprintf(vm_file, "call Math.multiply 2\n");
+    //@VM-OPERATION
+        for (int j = 0; j < i; j++) {
+            if (strcmp(ops[j], "+") == 0) {
+                fprintf(vm_file, "add\n");
+            } 
+            else if (strcmp(ops[j], "-") == 0) {
+                fprintf(vm_file, "sub\n");
+            } 
+            else if (strcmp(ops[j], "*") == 0) {
+                fprintf(vm_file, "call Math.multiply 2\n");
+            } 
+            else if (strcmp(ops[j], "/") == 0) {
+                fprintf(vm_file, "call Math.divide 2\n");
+            } 
+            else if (strstr(ops[j], "lt;") != NULL) {
+                fprintf(vm_file, "lt\n");
+            } 
+            else if (strstr(ops[j], "gt;") != NULL) {
+                fprintf(vm_file, "gt\n");
+            } 
+            else if (strcmp(ops[j], "=") == 0) {
+                fprintf(vm_file, "eq\n");
+            } 
+            else if (strstr(ops[j], "amp;") != NULL) {
+                fprintf(vm_file, "and\n");
+            } 
+            else if (strcmp(ops[j], "|") == 0) {
+                fprintf(vm_file, "or\n");
+            }
         }
-    }
     return current_instr;
 }
 
@@ -348,6 +421,7 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 return current_instr;
             }
             xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+            fprintf(vm_file, "pop %s %d\n", get_kind(ident->kind), ident->kind_index);
             current_instr = advance_parser(jack_file);
         } else if (strcmp(current_instr.value, "do") == 0) {
             char *do_class_name = NULL;
@@ -382,10 +456,10 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
             xmlNewChild(do_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
             xmlNodePtr expr_list_node = xmlNewChild(do_node, NULL, BAD_CAST "expressionList", BAD_CAST "");
-            current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
             int args_n = 0;
-            if (strcmp(current_instr.value, ",") != 0) {
+            if (strcmp(current_instr.value, ")") != 0) {
                 args_n++;
+                current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
             }
             while (strcmp(current_instr.value, ",") == 0) {
                 args_n++;
@@ -398,7 +472,6 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
             if (expr_list_node->children == NULL) {
                 xmlNodeSetContent(expr_list_node, BAD_CAST "\n");
             }
-            // TODO: missing call Output.printInt 1. Gerade nur Output 1 drin
             Identifier *ident = get_ident(do_class_name, subroutine_table);
             if (ident == NULL) {
                 ident = get_ident(do_class_name, class_table);
@@ -415,6 +488,7 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 } else {
                     fprintf(vm_file, "call %s.%s %d\n", do_class_name, do_method_name, args_n);
                 }
+                fprintf(vm_file, "pop temp 0\n");
             }
 
             if (strcmp(current_instr.value, ")") != 0) {
@@ -441,11 +515,13 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 fprintf(stderr, "Error: Missing semicolon return statement\n");
                 return current_instr;
             }
+            fprintf(vm_file, "return\n");
             xmlNewChild(return_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
         } else if(strcmp(current_instr.value, "if") == 0) {
             xmlNodePtr if_node = xmlNewChild(root_node, NULL, BAD_CAST "ifStatement", BAD_CAST "");    
             xmlNewChild(if_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+
             current_instr = advance_parser(jack_file);  
             if (strcmp(current_instr.value, "(") != 0) {
                 fprintf(stderr, "Error: Missing ( in ifStatement if block\n");
@@ -458,6 +534,12 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 fprintf(stderr, "Error: Missing ) in ifStatement if block\n");
                 return current_instr;                
             }
+            int local_if_index = if_index;
+            if_index++;
+            //@VM-OPERATION
+            fprintf(vm_file, "if-goto IF_BRANCH_%d\n", local_if_index);
+            fprintf(vm_file, "goto ELSE_BRANCH_%d\n", local_if_index);
+            fprintf(vm_file, "label IF_BRANCH_%d\n", local_if_index);
             xmlNewChild(if_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);  
             
@@ -476,11 +558,16 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 fprintf(stderr, "Error: Missing } in ifStatement if block\n");
                 return current_instr;                  
             }
+            //@VM-OPERATION
+            fprintf(vm_file, "goto IF_END_%d\n", local_if_index);
             xmlNewChild(if_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);  
             if (strcmp(current_instr.value, "else") == 0) {
+
                 xmlNewChild(if_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);
+                //@VM-OPERATION
+                fprintf(vm_file, "label ELSE_BRANCH_%d\n", local_if_index);
                 if (strcmp(current_instr.value, "{") != 0) {
                     fprintf(stderr, "Error: Missing { else block\n");
                     return current_instr;
@@ -495,10 +582,12 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 if (strcmp(current_instr.value, "}") != 0) {
                     fprintf(stderr, "Error: Missing } in ifStatement if block\n");
                     return current_instr;                  
-                }    
+                }  
                 xmlNewChild(if_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);                              
-            }        
+            }     
+            //@VM-OPERATION
+            fprintf(vm_file, "label IF_END_%d\n", local_if_index);   
         } else if (strcmp(current_instr.value, "while") == 0) {
             // 'while' '(' expression ')' '{' statements '}'
             xmlNodePtr while_node = xmlNewChild(root_node, NULL, BAD_CAST "whileStatement", BAD_CAST "");    
@@ -509,12 +598,17 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 return current_instr;
             }  
             xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-            current_instr = advance_parser(jack_file);      
+            current_instr = advance_parser(jack_file); 
+            //@VM-OPERATION  
+            // TODO: L1 -> compiled expression -> not -> if-goto L2-> compiled statements -> goto L1 -> L2 
+            fprintf(vm_file, "label WhileStart.%s.%s.%d\n", class_name, current_subroutine_name, while_index); 
             current_instr = compile_expression_node(jack_file, current_instr, while_node, vm_file, false);
             if (strcmp(current_instr.value, ")") != 0) {
                 fprintf(stderr, "Error: Missing ) in whileStatement\n");
                 return current_instr;                
             } 
+            //@VM-OPERATION
+            fprintf(vm_file, "not\nif-goto WhileEnd.%s.%s.%d\n", class_name, current_subroutine_name, while_index);
             xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);  
 
@@ -533,8 +627,11 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 fprintf(stderr, "Error: Missing } in while statement block\n");
                 return current_instr;                  
             }
+            fprintf(vm_file, "goto WhileStart.%s.%s.%d\n", class_name, current_subroutine_name, while_index); 
             xmlNewChild(while_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);  
+            fprintf(vm_file, "label WhileEnd.%s.%s.%d\n", class_name, current_subroutine_name, while_index); 
+            while_index++;
         } else {
             current_instr = advance_parser(jack_file);
         }
@@ -554,6 +651,7 @@ CurrentInstr compile_subroutine_body(FILE *jack_file, CurrentInstr current_instr
     while (strcmp(current_instr.value, "var") == 0) {
     current_instr = compile_var_dec(jack_file, current_instr, body_node);
     }
+    fprintf(vm_file, "%d\n", var_index);
 
     xmlNodePtr statement_node = xmlNewChild(body_node, NULL, BAD_CAST "statements", BAD_CAST "");
     current_instr = compile_statements(jack_file, current_instr, statement_node, vm_file);
@@ -571,6 +669,9 @@ CurrentInstr compile_subroutine_body(FILE *jack_file, CurrentInstr current_instr
 CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xmlNodePtr root_node, FILE *vm_file) {
     var_index = 0;
     arg_index = 0;
+    reset_ident_table(subroutine_table);
+    while_index = 0;
+    current_subroutine_name = NULL;
     bool is_constructor = strcmp(current_instr.value, "constructor") == 0;
     bool is_method = strcmp(current_instr.value, "method") == 0;
     xmlNodePtr subroutine_node = xmlNewChild(root_node, NULL, BAD_CAST "subroutineDec", BAD_CAST "");
@@ -594,6 +695,7 @@ CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xml
             fprintf(stderr, "Error: Missing subroutine identifier.\n");
             return current_instr;
         } 
+        char *constr_ident = current_instr.value;
         xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
         if (strcmp(current_instr.value, "new") != 0) {
@@ -601,6 +703,7 @@ CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xml
             return current_instr;
         }
         xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
+        asprintf(&current_subroutine_name, "%s.new", constr_ident);
         current_instr = advance_parser(jack_file);
 
     } else {
@@ -616,6 +719,7 @@ CurrentInstr compile_subroutine(FILE *jack_file, CurrentInstr current_instr, xml
         } 
         // @VM-OPERATION
         fprintf(vm_file, "%s.%s ", class_name, current_instr.value);
+        current_subroutine_name = current_instr.value;
         xmlNewChild(subroutine_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
         current_instr = advance_parser(jack_file);
     }
@@ -651,9 +755,16 @@ CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, 
     current_instr = advance_parser(jack_file);
     while (strcmp(current_instr.type, "identifier") == 0) {
         Identifier *ident = get_ident(current_instr.value, class_table);
-        if (ident == NULL) {
-            insert_ident(current_instr.value, type, kind == K_STATIC ? static_index : field_index, kind, class_table);
-            kind == K_STATIC ? static_index++ : field_index++;
+        if (kind == K_STATIC) {
+            if (ident == NULL || ident->kind != K_STATIC) {
+                insert_ident(current_instr.value, type, static_index, kind, class_table);
+                static_index++;
+            }
+        } else if (kind == K_FIELD) {
+            if (ident == NULL || ident->kind != K_FIELD) {
+                insert_ident(current_instr.value, type, field_index, kind, class_table);
+                field_index++;
+            }
         } else {
             fprintf(stderr, "Warn: Declared static or field identifier twice.\n");
         }
