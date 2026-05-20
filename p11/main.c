@@ -260,6 +260,10 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
             current_instr = advance_parser(jack_file);
             xmlNodePtr expr_list_node = xmlNewChild(term_node, NULL, BAD_CAST "expressionList", BAD_CAST "");
             int args_n = 0;
+            if (ident != NULL && ident->kind == K_FIELD) {
+                fprintf(vm_file, "push %s %d\n", get_kind(ident->kind), ident->kind_index);
+                args_n++;
+            }
             if (strcmp(current_instr.value, ")") != 0) {
                 args_n++;
                 current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
@@ -270,11 +274,12 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
                 current_instr = advance_parser(jack_file);
                 current_instr = compile_expression_node(jack_file, current_instr, expr_list_node, vm_file, false);
             }
-            fprintf(vm_file, "call %s", base);
+            char *class_name_for_call = (ident != NULL) ? ident->type : base;
             if (point_ext != NULL) {
-                fprintf(vm_file, ".%s", point_ext);
+                fprintf(vm_file, "call %s.%s %d\n", class_name_for_call, point_ext, args_n);
+            } else {
+                fprintf(vm_file, "call %s.%s %d\n", class_name_for_call, base, args_n);
             }
-            fprintf(vm_file, " %d\n", args_n);
             if (expr_list_node->children == NULL) {
                 xmlNodeSetContent(expr_list_node, BAD_CAST "\n");
             }
@@ -857,6 +862,7 @@ CurrentInstr compile_class_var_dec(FILE *jack_file, CurrentInstr current_instr, 
 }
 
 void compile_class(FILE *jack_file, xmlNodePtr node) {
+    reset_ident_table(class_table);
     // Check for class keyword
     CurrentInstr current_instr = advance_parser(jack_file);
     if (strcmp(current_instr.value, "class") != 0) {
