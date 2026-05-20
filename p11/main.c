@@ -222,10 +222,17 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
         current_instr = advance_parser(jack_file);
 
         if (strcmp(current_instr.value, "[") == 0) {
+            if (ident == NULL) {
+                fprintf(stderr, "Error: Array without symbol table represation\n");
+                return current_instr;
+            }
+            fprintf(vm_file, "push %s %d\n", get_kind(ident->kind), ident->kind_index);
             xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
             current_instr = compile_expression_node(jack_file, current_instr, term_node, vm_file, false);
-            
+            fprintf(vm_file, "add\n");
+            fprintf(vm_file, "pop pointer 1\n");
+            fprintf(vm_file, "push that 0\n");
             xmlNewChild(term_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             return advance_parser(jack_file);
         } 
@@ -293,6 +300,16 @@ CurrentInstr compile_term(FILE *jack_file, CurrentInstr current_instr, xmlNodePt
         if (strcmp(current_instr.type, "integerConstant") == 0) {
           fprintf(vm_file, "push constant %s\n", current_instr.value);
 
+        }
+        if (strcmp(current_instr.type, "stringConstant") == 0) {
+            char *str = current_instr.value;
+            int len = strlen(str);
+            fprintf(vm_file, "push constant %d\n", len);
+            fprintf(vm_file, "call String.new 1\n");
+            for (int i = 0; i < len; i++) {
+                fprintf(vm_file, "push constant %d\n", (int)str[i]);
+                fprintf(vm_file, "call String.appendChar 2\n");
+            }
         }
         if (strcmp(current_instr.value, "true") == 0 
         || strcmp(current_instr.value, "false") == 0
@@ -410,11 +427,24 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
 
             xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
             current_instr = advance_parser(jack_file);
+            /*
+            a[i] = b[j]
+            push arr
+            push i
+            add
+            pop temp 0
+            pop pointer 1
+            push temp 0
+            pop that 0
+            */
+           bool is_array = false;
             if (strcmp(current_instr.value, "[") == 0) {
+                is_array = true;
+                fprintf(vm_file, "push %s %d\n", get_kind(ident->kind), ident->kind_index);
                 xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);
                 current_instr = compile_expression_node(jack_file, current_instr, let_node, vm_file, false);
-                
+                fprintf(vm_file, "add\n");
                 xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
                 current_instr = advance_parser(jack_file);
             } 
@@ -430,8 +460,16 @@ CurrentInstr compile_statements(FILE *jack_file, CurrentInstr current_instr, xml
                 return current_instr;
             }
             xmlNewChild(let_node, NULL, BAD_CAST current_instr.type, BAD_CAST current_instr.value);
-            fprintf(vm_file, "pop %s %d\n", get_kind(ident->kind), ident->kind_index);
             current_instr = advance_parser(jack_file);
+            if (is_array) {
+                fprintf(vm_file, "pop temp 0\n");
+                fprintf(vm_file, "pop pointer 1\n");
+                fprintf(vm_file, "push temp 0\n");
+                fprintf(vm_file, "pop that 0\n");
+            } else {
+                fprintf(vm_file, "pop %s %d\n", get_kind(ident->kind), ident->kind_index);
+
+            }
         } else if (strcmp(current_instr.value, "do") == 0) {
             char *do_class_name = NULL;
             char *do_method_name = NULL;
