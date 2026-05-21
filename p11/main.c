@@ -877,9 +877,12 @@ void compile_class(FILE *jack_file, xmlNodePtr node) {
         return;
     }
     class_name = current_instr.value;
-    char vm_name[strlen(class_name) + 18];
-    snprintf(vm_name, sizeof(vm_name), "./test_output/%s.vm", class_name);
+    char vm_name[strlen(class_name) + 256];
+    snprintf(vm_name, sizeof(vm_name), "./Square_output/%s.vm", class_name);
     FILE *vm_file = fopen(vm_name, "w");
+    if (vm_file == NULL) {
+        fprintf(stderr, "Error: Initializing vm file crashed.\n");
+    }
     xmlNewChild(node, NULL, BAD_CAST strdup(current_instr.type), BAD_CAST strdup(current_instr.value));
     current_instr = advance_parser(jack_file);
     if (strcmp(current_instr.value, "{") != 0) {
