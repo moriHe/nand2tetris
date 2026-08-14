@@ -1,76 +1,76 @@
 # Nand2Tetris — Knowledge Document
 
-## Überblick
+## Overview
 
-Dieses Repository dokumentiert praktische Arbeit am Nand2Tetris-Kurs und damit den Aufbau eines Computersystems über mehrere Abstraktionsebenen hinweg.
+This repository documents practical work on the Nand2Tetris course and therefore the construction of a computer system across multiple abstraction layers.
 
-Das Repository enthält die Projektverzeichnisse `p1` bis `p12` und zeigt insbesondere in den späteren Projekten selbst implementierte Übersetzer-, Compiler- und Betriebssystembestandteile.
+The repository contains project directories `p1` through `p12` and, particularly in the later projects, demonstrates implementations of translators, compiler components, and operating system components.
 
-## Technischer Schwerpunkt
+## Technical Focus
 
-Nand2Tetris verbindet Rechnerarchitektur, Maschinensprache, Assembler, virtuelle Maschinen, Compilerbau und grundlegende Betriebssystemfunktionen.
+Nand2Tetris combines computer architecture, machine language, assembly language, virtual machines, compiler construction, and fundamental operating system concepts.
 
-Der besondere Wert des Projekts liegt darin, dass nicht nur eine Anwendung auf vorhandenen Frameworks gebaut wird, sondern die Abstraktionsschichten unterhalb normaler Anwendungsentwicklung nachvollzogen und implementiert werden.
+The particular value of this project is that it does not simply build an application on top of existing frameworks. Instead, it explores and implements the abstraction layers that are normally hidden underneath application development.
 
-## Implementierungen im Repository
+## Implementations in the Repository
 
 ### Assembler
 
-Im Umfeld von Projekt 6 ist eine Implementierung in C vorhanden.
+Around project 6, an implementation written in C is present.
 
-Das Repository enthält erzeugte Hack-Maschinencode-Dateien wie:
+The repository contains generated Hack machine-code files such as:
 
 - `Add.hack`
 - `Max.hack`
 - `Pong.hack`
 - `Rect.hack`
 
-Damit wird die Übersetzung von symbolischer Hack-Assemblersprache in binären Maschinencode behandelt.
+This part of the project deals with translating symbolic Hack assembly language into binary machine code.
 
 ### VM Translator
 
-Die Projekte 7 und 8 enthalten eine in C aufgebaute VM-Übersetzung.
+Projects 7 and 8 contain a VM translation implementation written in C.
 
-Zu sehen sind unter anderem:
+The implementation includes components such as:
 
 - Parser
 - Writer
-- Stack-Pointer-Logik
-- Utility-Komponenten
+- Stack pointer logic
+- Utility components
 
-Testfälle umfassen unter anderem:
+Test cases cover areas including:
 
-- Stack-Arithmetik
-- Push/Pop
-- Pointer- und Static-Segmente
-- Schleifen
-- Funktionen
-- Fibonacci-Beispiele
+- Stack arithmetic
+- Push/pop operations
+- Pointer and static segments
+- Loops
+- Functions
+- Fibonacci examples
 
-Die Aufgabe verbindet eine stackbasierte virtuelle Maschine mit der darunterliegenden Hack-Assemblersprache.
+This part of the project connects a stack-based virtual machine to the underlying Hack assembly language.
 
 ### Compiler Frontend
 
-Projekt 10 enthält Arbeit an Tokenizer und Parser sowie erzeugte XML-Repräsentationen für Jack-Programme wie Square und SquareGame.
+Project 10 contains work on a tokenizer and parser, as well as generated XML representations for Jack programs such as Square and SquareGame.
 
-Damit werden lexikalische Analyse und Syntaxanalyse einer höheren Programmiersprache praktisch umgesetzt.
+This demonstrates the practical implementation of lexical analysis and syntax analysis for a higher-level programming language.
 
 ### Compiler
 
-Projekt 11 erweitert den Compiler um Symboltabellen und Codegenerierung.
+Project 11 extends the compiler with symbol tables and code generation.
 
-Das Repository enthält eine `symbol_table`-Komponente und Ausgaben für Programme wie:
+The repository contains a `symbol_table` component and generated output for programs such as:
 
 - Average
 - ComplexArrays
 - Pong
 - Square
 
-Damit werden Variablenauflösung, Scopes und die Übersetzung von Jack in die VM-Zielsprache behandelt.
+This covers variable resolution, scopes, and translation from Jack into the VM target language.
 
-### Jack OS / Laufzeitbibliothek
+### Jack OS / Runtime Library
 
-Projekt 12 enthält Implementierungen zentraler Jack-Bibliotheksklassen, darunter:
+Project 12 contains implementations of core Jack library classes, including:
 
 - `Array`
 - `Keyboard`
@@ -80,38 +80,38 @@ Projekt 12 enthält Implementierungen zentraler Jack-Bibliotheksklassen, darunte
 - `String`
 - `Sys`
 
-Dazu kommen entsprechende Tests.
+Corresponding tests are also included.
 
-Dadurch wird nachvollziehbar, welche Laufzeitdienste höhere Programme benötigen und wie diese auf einer sehr kleinen Plattform bereitgestellt werden.
+This demonstrates which runtime services higher-level programs require and how those services can be implemented on top of a minimal computing platform.
 
-## Demonstrierte Kenntnisse
+## Demonstrated Skills
 
-- C und systemnahe Programmierung
-- Rechnerarchitektur und Maschinensprache
-- Assemblierung und Codegenerierung
-- Stackmaschinen und virtuelle Maschinen
-- Parser und Tokenizer
-- Compilerbau
-- Symboltabellen und Scope-Verwaltung
-- Speicher- und Laufzeitkonzepte
-- Debugging über mehrere Abstraktionsebenen
-- Verständnis der Kette von Hochsprache bis Maschinencode
+- C and low-level programming
+- Computer architecture and machine language
+- Assembly and code generation
+- Stack machines and virtual machines
+- Parsers and tokenizers
+- Compiler construction
+- Symbol tables and scope management
+- Memory and runtime concepts
+- Debugging across multiple abstraction layers
+- Understanding of the complete path from high-level language to machine code
 
-## Einordnung
+## Project Classification
 
-Das Projekt ist primär ein Computer-Science-/Lernprojekt und keine klassische Produktanwendung.
+This is primarily a computer science and educational project rather than a traditional product application.
 
-Für ein technisches Profil ist es besonders relevant, weil es Grundlagen demonstriert, die bei normaler Framework-Entwicklung häufig verborgen bleiben.
+It is particularly relevant for a technical profile because it demonstrates knowledge of fundamental concepts that are often hidden by modern frameworks and high-level development environments.
 
-## Gute Retrieval-Fragen
+## Useful Retrieval Questions
 
-- Welche Erfahrung gibt es mit Compilerbau?
-- Hat der Entwickler systemnah mit C gearbeitet?
-- Wie tief reicht das Verständnis von Rechnerarchitektur?
-- Wurde eine virtuelle Maschine oder ein VM-Translator implementiert?
-- Welche Erfahrung besteht mit Parsern, Tokenizern und Symboltabellen?
-- Wurden Betriebssystem- oder Laufzeitkomponenten implementiert?
+- What experience does the developer have with compiler construction?
+- Has the developer worked with C and low-level programming?
+- How deep is the developer's understanding of computer architecture?
+- Has the developer implemented a virtual machine or VM translator?
+- What experience does the developer have with parsers, tokenizers, and symbol tables?
+- Has the developer implemented operating system or runtime components?
 
-## Quelle
+## Source
 
 GitHub Repository: moriHe/nand2tetris
